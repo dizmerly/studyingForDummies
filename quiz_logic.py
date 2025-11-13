@@ -92,6 +92,38 @@ def load_questions(file_path: str):
     
     return questions
 
+def load_questions_from_text(text):
+    """
+    Parse quiz questions directly from pasted text.
+    Returns list of question dicts (same as load_questions).
+    """
+    from io import StringIO
+    f = StringIO(text)
+    content = f.read()
+    
+    # reuse the same parsing logic as load_questions
+    matches = BLOCK_RE.findall(content)
+    questions = []
+    for i, match in enumerate(matches, start=1):
+        question_text = match[0].strip()
+        choices_text = match[1]
+        answer_line = match[2].strip()
+        
+        choices = parse_choices(choices_text)
+        answer_m = re.search(r'\b([A-D])\b', answer_line, re.I)
+        if not answer_m:
+            continue
+        correct_letter = answer_m.group(1).upper()
+        
+        ok, reason = valid_block(question_text, choices, correct_letter)
+        if ok:
+            questions.append({
+                'question': question_text,
+                'choices': choices,
+                'answer': correct_letter
+            })
+    return questions
+
 # ---------- Console Quiz Runner (Optional) ----------
 def run_console_quiz(file_path: str):
     """

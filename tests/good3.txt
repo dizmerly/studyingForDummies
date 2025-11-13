@@ -1,0 +1,290 @@
+"""QUESTION"""
+Let A(z)=∑ 
+k=0
+∞
+​
+ a 
+k
+​
+ z 
+k
+  be the ordinary generating function of the sequence (a 
+0
+​
+ ,a 
+1
+​
+ ,a 
+2
+​
+ ,…).
+What is the coefficient-extraction symbol [z 
+n
+ ]A(z)?
+"""CHOICES"""
+A: a 
+n−1
+​
+ 
+B: a 
+n
+​
+ 
+C: a 
+n+1
+​
+ 
+D: na 
+n
+​
+ 
+"""ANSWER"""
+B
+"""QUESTION"""
+The generating function of the constant sequence (1,1,1,…) is
+"""CHOICES"""
+A:  
+1+z
+1
+​
+ 
+B:  
+1−z
+1
+​
+ 
+C:  
+1−z
+z
+​
+ 
+D:  
+(1−z) 
+2
+ 
+1
+​
+ 
+"""ANSWER"""
+B
+"""QUESTION"""
+The generating function of the sequence (0,1,2,3,…) is
+"""CHOICES"""
+A:  
+1−z
+z
+​
+ 
+B:  
+(1−z) 
+2
+ 
+1
+​
+ 
+C:  
+(1−z) 
+2
+ 
+z
+​
+ 
+D:  
+(1−z) 
+3
+ 
+1+z
+​
+ 
+"""ANSWER"""
+C
+"""QUESTION"""
+The generating function of the sequence of squares (0,1,4,9,16,…) is
+"""CHOICES"""
+A:  
+(1−z) 
+3
+ 
+z(1+z)
+​
+ 
+B:  
+(1−z) 
+2
+ 
+z
+​
+ 
+C:  
+(1−z) 
+2
+ 
+1+z
+​
+ 
+D:  
+(1−z) 
+4
+ 
+z
+​
+ 
+"""ANSWER"""
+A
+"""QUESTION"""
+If A(z)=∑ 
+k=0
+∞
+​
+ a 
+k
+​
+ z 
+k
+ , what sequence has generating function A 
+′
+ (z)= 
+dz
+d
+​
+ A(z)?
+"""CHOICES"""
+A: (a 
+1
+​
+ ,2a 
+2
+​
+ ,3a 
+3
+​
+ ,…)
+B: (0,a 
+1
+​
+ ,2a 
+2
+​
+ ,3a 
+3
+​
+ ,…)
+C: (1a 
+1
+​
+ ,2a 
+2
+​
+ ,3a 
+3
+​
+ ,…)
+D: (a 
+0
+​
+ ,a 
+1
+​
+ ,a 
+2
+​
+ ,…)
+"""ANSWER"""
+C
+"""QUESTION"""
+A formal power series A(z)=∑ 
+k=0
+∞
+​
+ a 
+k
+​
+ z 
+k
+  has a multiplicative inverse if and only if
+"""CHOICES"""
+A: a 
+1
+​
+ 
+
+=0
+B: a 
+0
+​
+ 
+
+=0
+C: a 
+0
+​
+ =1
+D: all a 
+k
+​
+ 
+
+=0
+"""ANSWER"""
+B
+"""QUESTION"""
+The generating function of the binomial sequence (( 
+0
+n
+​
+ ),( 
+1
+n
+​
+ ),…,( 
+n
+n
+​
+ ),0,0,…) is
+"""CHOICES"""
+A: (1+z) 
+n
+ 
+B: (1−z) 
+n
+ 
+C:  
+(1+z) 
+n
+ 
+1
+​
+ 
+D:  
+(1−z) 
+n
+ 
+1
+​
+ 
+"""ANSWER"""
+A
+"""QUESTION"""
+Let D(z)=z+z 
+2
+ +z 
+3
+ +z 
+4
+ +z 
+5
+ +z 
+6
+  be the generating function for a single fair 6-sided die.
+The coefficient of z 
+7
+  in D(z) 
+2
+  equals
+"""CHOICES"""
+A: 5
+B: 6
+C: 7
+D: 8
+"""ANSWER"""
+B

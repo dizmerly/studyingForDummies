@@ -1,8 +1,20 @@
+import tkinter
 import customtkinter as ctk
-from CTkMessagebox import CTkMessagebox
+from CTkMessagebox import CTkMessagebox, ctkmessagebox
 from tkinter import filedialog, messagebox
-from quiz_logic import load_questions  # Import from our logic module
+from quiz_logic import load_questions, load_questions_from_text   # Import from our logic module
 import json, os
+
+"""
+FEATURE LIST TO ADD: 
+    
+Make sure that text is fitted accordingly to the problem, sometimes a question 
+with lots of text doesn't fit nicely. 
+"""
+
+
+
+
 
 """ 
 Global variables in order to standardized certain parameters such as delay, 
@@ -33,6 +45,8 @@ Paste window - opens a paste window where the user can input text from
 another source. Makes it a bit more user friendly
 """
 
+
+
 class PasteWindow(ctk.CTkToplevel):
     def __init__(self, parent):
         super().__init__(parent)
@@ -51,11 +65,22 @@ class PasteWindow(ctk.CTkToplevel):
 
     def submit_text(self):
         text = self.textbox.get("1.0", "end").strip()
-        if text:
-            print("User pasted text:\n", text)
-            self.destroy()
-        else:
-            ctk.CtkMessagebox(title="Error", message="Please paste some text first!")
+        if not text:
+            messagebox.showerror(title="Error", message="Please paste some text first!")
+            return
+    
+        try:
+            self.master.questions = load_questions_from_text(text)
+            if not self.master.questions:
+                messagebox.showerror(title="Error", message="No valid questions found!")
+                return
+            
+            self.master.current_question = 0
+            self.master.score = 0
+            self.master.show_question()
+            self.destroy()  # close paste window
+        except Exception as e:
+            messagebox.showerror(title="Error", message=f"Failed to parse quiz:\n{e}")
 
 
 
@@ -79,7 +104,7 @@ class QuizApp(ctk.CTk):
         
         # Set theme
         ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("#E8B45A")
+        ctk.set_default_color_theme("green")
         
         # Application state variables
         self.questions = []
@@ -124,7 +149,7 @@ class QuizApp(ctk.CTk):
         load_btn = ctk.CTkButton(
             self.main_frame,
             text="Upload Quiz File",
-            command=self.open_paste_window,
+            command=self.load_file,
             width=200,
             height=50,
             font=ctk.CTkFont(size=16)
@@ -134,10 +159,10 @@ class QuizApp(ctk.CTk):
         paste_btn = ctk.CTkButton(
             self.main_frame,
             text="Paste Quiz File",
+            command=self.open_paste_window,
             width=200,
             height=50,
-            font=ctk.CTkFont(size=16)
-            self.command
+            font=ctk.CTkFont(size=16),
         )
         paste_btn.pack(pady=10)
         

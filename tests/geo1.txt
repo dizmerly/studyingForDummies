@@ -1,0 +1,108 @@
+"""QUESTION"""
+Which term refers to the average weather conditions over a long period of time?
+"""CHOICES"""
+A: Weather
+B: Climate
+C: Storm
+D: Front
+"""ANSWER"""
+B
+"""QUESTION"""
+What are the four main precipitation lifting mechanisms?
+"""CHOICES"""
+A: Convergent, Convectional, Orographic, Frontal
+B: Convergent, Convectional, Oceanic, Frontal
+C: Convergent, Convectional, Orographic, Global
+D: Convergent, Continental, Orographic, Frontal
+"""ANSWER"""
+A
+"""QUESTION"""
+In which region do trade-wind convergence, ample moisture, and strong convection produce a consistently wet climate?
+"""CHOICES"""
+A: Subtropics
+B: Equatorial region
+C: Continental interior
+D: Leeward side of mountains
+"""ANSWER"""
+B
+"""QUESTION"""
+Which side of a mountain range typically experiences a dry climate due to rain-shadow effects?
+"""CHOICES"""
+A: Windward
+B: Leeward
+C: Summit
+D: Valley
+"""ANSWER"""
+B
+"""QUESTION"""
+A climate with roughly equal precipitation in every month is described as
+"""CHOICES"""
+A: Summer max
+B: Winter max
+C: Uniform
+D: Double maxima
+"""ANSWER"""
+C
+"""QUESTION"""
+Which temporal precipitation pattern is characteristic of Mediterranean climates?
+"""CHOICES"""
+A: Uniform
+B: Summer max
+C: Winter max
+D: Double maxima
+"""ANSWER"""
+C
+"""QUESTION"""
+Which of the following is NOT one of the five main components used in climate classification?
+"""CHOICES"""
+A: Insolation/Latitude
+B: Temperature
+C: Ocean depth
+D: Precipitation
+"""ANSWER"""
+C
+"""QUESTION"""
+Genetic climate classification is based on
+"""CHOICES"""
+A: Only temperature data
+B: Forcing factors such as net radiation and air masses
+C: Precipitation totals only
+D: Plant types
+"""ANSWER"""
+B
+"""QUESTION"""
+Tropical climates are located between which two lines of latitude?
+"""CHOICES"""
+A: Arctic and Antarctic Circles
+B: Tropic of Cancer and Tropic of Capricorn
+C: Equator and 30 degrees
+D: 30 and 60 degrees
+"""ANSWER"""
+B
+"""QUESTION"""
+Which mesothermal subtype features dry summers caused by the expansion of subtropical highs or cold ocean currents?
+"""CHOICES"""
+A: Humid subtropical
+B: Marine west coast
+C: Mediterranean
+D: Tropical savanna
+"""ANSWER"""
+C
+"""QUESTION"""
+Microthermal climates with cold winters are found
+"""CHOICES"""
+A: Only in the Southern Hemisphere
+B: Only near the equator
+C: In middle and high latitudes of the Northern Hemisphere
+D: On the windward side of mountains
+"""ANSWER"""
+C
+"""QUESTION"""
+Which polar climate subtype has temperatures below freezing year-round and covers Greenland and Antarctica?
+"""CHOICES"""
+A: Tundra
+B: Ice cap
+C: Taiga
+D: Steppe
+"""ANSWER"""
+B
