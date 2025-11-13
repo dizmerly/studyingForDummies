@@ -1,6 +1,8 @@
 import customtkinter as ctk
+from CTkMessagebox import CTkMessagebox
 from tkinter import filedialog, messagebox
 from quiz_logic import load_questions  # Import from our logic module
+import json, os
 
 """ 
 Global variables in order to standardized certain parameters such as delay, 
@@ -11,6 +13,55 @@ Later down the road these variables will be able to be adjusted by the user in a
 
 # Global delay (for any action that has an automatic skip, i.e. getting an answer correct/incorrect)
 DELAY = 800 
+PREF_FILE = "./userdata/prefs.json"
+
+
+def load_prefs():
+    if os.path.exists(PREF_FILE):
+        with open(PREF_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_prefs(prefs):
+    with open(PREF_FILE, "w") as f:
+        json.dump(prefs, f)
+
+"""
+Helper classes for GUI
+
+Paste window - opens a paste window where the user can input text from
+another source. Makes it a bit more user friendly
+"""
+
+class PasteWindow(ctk.CTkToplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Paste Quiz Questions")
+        self.geometry("600x400")
+
+        ctk.CTkLabel(self, text="Paste your quiz questions below:").pack(pady=(10,5))
+
+        self.textbox = ctk.CTkTextbox(self, width=550, height=250)
+        self.textbox.pack(pady=10)
+
+        submit_btn = ctk.CTkButton(
+            self, text="Submit", command=self.submit_text
+        )
+        submit_btn.pack(pady=10)
+
+    def submit_text(self):
+        text = self.textbox.get("1.0", "end").strip()
+        if text:
+            print("User pasted text:\n", text)
+            self.destroy()
+        else:
+            ctk.CtkMessagebox(title="Error", message="Please paste some text first!")
+
+
+
+
+
+
 
 
 
@@ -43,6 +94,10 @@ class QuizApp(ctk.CTk):
         # Show start screen
         self.show_start_screen()
     
+    
+    def open_paste_window(self):
+        PasteWindow(self)
+        
     def show_start_screen(self):
         """Display the initial screen with file selection."""
         # Clear frame
@@ -69,7 +124,7 @@ class QuizApp(ctk.CTk):
         load_btn = ctk.CTkButton(
             self.main_frame,
             text="Upload Quiz File",
-            command=self.load_file,
+            command=self.open_paste_window,
             width=200,
             height=50,
             font=ctk.CTkFont(size=16)
@@ -79,10 +134,10 @@ class QuizApp(ctk.CTk):
         paste_btn = ctk.CTkButton(
             self.main_frame,
             text="Paste Quiz File",
-            command=self.load_file,
             width=200,
             height=50,
             font=ctk.CTkFont(size=16)
+            self.command
         )
         paste_btn.pack(pady=10)
         
