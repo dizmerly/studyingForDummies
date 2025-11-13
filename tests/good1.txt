@@ -1,0 +1,39 @@
+"""QUESTION"""
+What is 3 + 6?
+"""CHOICES"""
+A: 9
+B: 6
+C: 12
+D: 3
+"""ANSWER"""
+A
+
+"""QUESTION"""
+What is 12 - 5?
+"""CHOICES"""
+A: 9
+B: 7
+C: 6
+D: 8
+"""ANSWER"""
+B
+
+"""QUESTION"""
+Who was the first President of the United States?
+"""CHOICES"""
+A: George Washington
+B: Thomas Jefferson
+C: John Adams
+D: James Madison
+"""ANSWER"""
+A
+
+"""QUESTION"""
+In what year did World War II end?
+"""CHOICES"""
+A: 1939
+B: 1943
+C: 1945
+D: 1950
+"""ANSWER"""
+C

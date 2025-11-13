@@ -1,0 +1,131 @@
+"""QUESTION"""
+You are designing a distributed system that processes large batches of sensor data coming from thousands of IoT devices. 
+Each device sends data every 5 seconds, and the system must maintain both fault tolerance and high throughput. 
+To handle peak loads, you consider four architectural approaches. 
+Each approach differs in message queue structure, replication strategy, 
+failure recovery time, and scaling method. 
+Your task is to choose the architecture that provides the best combination 
+of horizontal scalability, minimal message loss during node failures, 
+and efficient load redistribution across worker nodes when demand spikes unexpectedly.
+"""CHOICES"""
+A: A single central message queue with periodic snapshotting, 
+   manual scaling of worker nodes, and synchronous replication across two regions.
+B: A multi-stage pipeline using independent queues per processing stage, 
+   with asynchronous replication, automatic scaling rules triggered by CPU usage, 
+   and fallback spill-to-disk buffering during bursts.
+C: A distributed event-streaming platform with partitioned topics, 
+   replication factor 3 across availability zones, 
+   consumer groups for parallel processing, 
+   and elastic autoscaling triggered by partition lag.
+D: A hybrid batch-stream model that stores incoming data in large write-ahead logs, 
+   then processes them in micro-batches, 
+   with replication only at checkpoint intervals and static worker allocation.
+"""ANSWER"""
+C
+"""QUESTION"""
+You are designing a distributed system that processes large batches of sensor data coming from thousands of IoT devices. 
+Each device sends data every 5 seconds, and the system must maintain both fault tolerance and high throughput. 
+To handle peak loads, you consider four architectural approaches. 
+Each approach differs in message queue structure, replication strategy, 
+failure recovery time, and scaling method. 
+Your task is to choose the architecture that provides the best combination 
+of horizontal scalability, minimal message loss during node failures, 
+and efficient load redistribution across worker nodes when demand spikes unexpectedly.
+"""CHOICES"""
+A: A single central message queue with periodic snapshotting, 
+   manual scaling of worker nodes, and synchronous replication across two regions.
+B: A multi-stage pipeline using independent queues per processing stage, 
+   with asynchronous replication, automatic scaling rules triggered by CPU usage, 
+   and fallback spill-to-disk buffering during bursts.
+C: A distributed event-streaming platform with partitioned topics, 
+   replication factor 3 across availability zones, 
+   consumer groups for parallel processing, 
+   and elastic autoscaling triggered by partition lag.
+D: A hybrid batch-stream model that stores incoming data in large write-ahead logs, 
+   then processes them in micro-batches, 
+   with replication only at checkpoint intervals and static worker allocation.
+"""ANSWER"""
+C
+
+"""QUESTION"""
+You are designing a distributed system that processes large batches of sensor data coming from thousands of IoT devices. 
+Each device sends data every 5 seconds, and the system must maintain both fault tolerance and high throughput. 
+To handle peak loads, you consider four architectural approaches. 
+Each approach differs in message queue structure, replication strategy, 
+failure recovery time, and scaling method. 
+Your task is to choose the architecture that provides the best combination 
+of horizontal scalability, minimal message loss during node failures, 
+and efficient load redistribution across worker nodes when demand spikes unexpectedly.
+"""CHOICES"""
+A: A single central message queue with periodic snapshotting, 
+   manual scaling of worker nodes, and synchronous replication across two regions.
+B: A multi-stage pipeline using independent queues per processing stage, 
+   with asynchronous replication, automatic scaling rules triggered by CPU usage, 
+   and fallback spill-to-disk buffering during bursts.
+C: A distributed event-streaming platform with partitioned topics, 
+   replication factor 3 across availability zones, 
+   consumer groups for parallel processing, 
+   and elastic autoscaling triggered by partition lag.
+D: A hybrid batch-stream model that stores incoming data in large write-ahead logs, 
+   then processes them in micro-batches, 
+   with replication only at checkpoint intervals and static worker allocation.
+"""ANSWER"""
+C
+
+
+
+
+
+"""QUESTION"""
+You are designing a distributed system that processes large batches of sensor data coming from thousands of IoT devices. 
+Each device sends data every 5 seconds, and the system must maintain both fault tolerance and high throughput. 
+To handle peak loads, you consider four architectural approaches. 
+Each approach differs in message queue structure, replication strategy, 
+failure recovery time, and scaling method. 
+Your task is to choose the architecture that provides the best combination 
+of horizontal scalability, minimal message loss during node failures, 
+and efficient load redistribution across worker nodes when demand spikes unexpectedly.
+"""CHOICES"""
+A: A single central message queue with periodic snapshotting, 
+   manual scaling of worker nodes, and synchronous replication across two regions.
+B: A multi-stage pipeline using independent queues per processing stage, 
+   with asynchronous replication, automatic scaling rules triggered by CPU usage, 
+   and fallback spill-to-disk buffering during bursts.
+C: A distributed event-streaming platform with partitioned topics, 
+   replication factor 3 across availability zones, 
+   consumer groups for parallel processing, 
+   and elastic autoscaling triggered by partition lag.
+D: A hybrid batch-stream model that stores incoming data in large write-ahead logs, 
+   then processes them in micro-batches, 
+   with replication only at checkpoint intervals and static worker allocation.
+"""ANSWER"""
+C
+
+
+
+
+"""QUESTION"""
+You are designing a distributed system that processes large batches of sensor data coming from thousands of IoT devices. 
+Each device sends data every 5 seconds, and the system must maintain both fault tolerance and high throughput. 
+To handle peak loads, you consider four architectural approaches. 
+Each approach differs in message queue structure, replication strategy, 
+failure recovery time, and scaling method. 
+Your task is to choose the architecture that provides the best combination 
+of horizontal scalability, minimal message loss during node failures, 
+and efficient load redistribution across worker nodes when demand spikes unexpectedly.
+"""CHOICES"""
+A: A single central message queue with periodic snapshotting, 
+   manual scaling of worker nodes, and synchronous replication across two regions.
+B: A multi-stage pipeline using independent queues per processing stage, 
+   with asynchronous replication, automatic scaling rules triggered by CPU usage, 
+   and fallback spill-to-disk buffering during bursts.
+C: A distributed event-streaming platform with partitioned topics, 
+   replication factor 3 across availability zones, 
+   consumer groups for parallel processing, 
+   and elastic autoscaling triggered by partition lag.
+D: A hybrid batch-stream model that stores incoming data in large write-ahead logs, 
+   then processes them in micro-batches, 
+   with replication only at checkpoint intervals and static worker allocation.
+"""ANSWER"""
+C
+

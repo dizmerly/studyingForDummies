@@ -1,0 +1,54 @@
+"""QUESTION"""
+ 
+"""CHOICES"""
+A: This question has no actual prompt.
+B: Just here for testing.
+"""ANSWER"""
+A
+
+"""QUESTION"""
+What is the capital of France?
+"""CHOICES"""
+A: Paris
+"""ANSWER"""
+A
+
+"""QUESTION"""
+Which number is even?
+"""CHOICES"""
+A: 3
+B: 4
+"""ANSWER"""
+C
+
+"""QUESTION"""
+Select the correct statement:
+"""CHOICES"""
+A: The sky is green.
+B: Water is wet.
+C: Fire is cold.
+D:
+"""ANSWER"""
+B
+
+"""QUESTION"""
+Who wrote '1984'?
+"""CHOICES"""
+A: George Orwell
+B:
+"""ANSWER"""
+A
+
+"""QUESTION"""
+This question has no answer section.
+"""CHOICES"""
+A: Choice 1
+B: Choice 2
+
+"""QUESTION"""
+Which animal is a mammal?
+"""CHOICES"""
+A: Shark
+B: Dolphin
+"""ANSWER"""
+B
