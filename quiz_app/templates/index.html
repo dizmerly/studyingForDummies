@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studying for Dummies</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <!-- Fixed header with controls -->
+    <div class="header-controls">
+        <div class="header-left">
+            <button class="nav-btn" onclick="showStartScreen()">🏠 Home</button>
+            <button class="nav-btn" onclick="showHistoryScreen()">📊 History</button>
+        </div>
+        <div class="header-right">
+            <button class="help-btn" onclick="showHelp()">❓ Help</button>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓 Theme</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Start Screen -->
+        <div id="startScreen">
+            <h1>Studying for Dummies ¯\_(ツ)_/¯</h1>
+            <p class="subtitle">Load a quiz file to get started</p>
+            
+            <div class="btn-group">
+                <input type="file" id="fileInput" class="file-input" accept=".txt" onchange="handleFileUpload(event)">
+                <button onclick="document.getElementById('fileInput').click()">📁 Upload Quiz File</button>
+                <button onclick="showPasteModal()">📋 Paste Quiz Text</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="hidden">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText"></div>
+            </div>
+            
+            <div class="question-card">
+                <div class="question-text" id="questionText"></div>
+                <div id="choicesContainer"></div>
+            </div>
+            
+            <div style="text-align: center;">
+                <button onclick="checkAnswer()">✓ Submit Answer</button>
+                <div class="feedback" id="feedback"></div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="hidden">
+            <div class="results-card">
+                <h1>🎉 Quiz Complete!</h1>
+                
+                <div class="results-score">
+                    <div class="score-number" id="scoreText"></div>
+                    <div class="percentage" id="percentageText"></div>
+                </div>
+                
+                <div class="message" id="messageText"></div>
+                
+                <div class="btn-group">
+                    <button onclick="restartQuiz()">🔄 Take Quiz Again</button>
+                    <button onclick="showStartScreen()">📚 Load New Quiz</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Screen -->
+        <div id="historyScreen" class="hidden">
+            <div class="history-container">
+                <div class="history-header">
+                    <h1>📊 Quiz History</h1>
+                    <button onclick="clearHistory()" style="min-width: auto; padding: 12px 24px;">🗑️ Clear All</button>
+                </div>
+                
+                <div id="historyList">
+                    <!-- History items will be populated here -->
+                </div>
+                
+                <div id="emptyHistory" class="empty-state hidden">
+                    <div class="empty-state-icon">📭</div>
+                    <div class="empty-state-text">No quiz history yet</div>
+                    <p>Complete a quiz to see your results here!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paste Modal -->
+    <div id="pasteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Paste Quiz Questions</h2>
+                <button class="close-btn" onclick="closePasteModal()">×</button>
+            </div>
+            <p style="line-height: 1.6; color: #4a5568;">
+                Paste your quiz questions below in the correct format:
+            </p>
+            <textarea id="pasteTextarea" placeholder="Paste quiz text here..."></textarea>
+            <button onclick="submitPastedText()">✓ Submit</button>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Help & Instructions</h2>
+                <button class="close-btn" onclick="closeHelpModal()">×</button>
+            </div>
+            <p style="line-height: 1.8; color: #4a5568; margin-bottom: 20px;">
+                <strong>How to create quizzes:</strong><br>
+                Before generating quiz questions with a chatbot, paste the following as a prompt to the AI:
+            </p>
+            <textarea readonly style="background: #f7fafc; min-height: 300px; margin-top: 15px;">From this moment on you are a quiz generator that outputs only raw ASCII blocks matching exactly the following format:
+
+"""QUESTION"""
+The question text goes here.
+"""CHOICES"""
+A: ...
+B: ...
+C: ...
+D: ...
+"""ANSWER"""
+A-D (single capital letter only)
+
+Repeat these blocks back-to-back with no extra whitespace, bullets, or added formatting.</textarea>
+            
+            <p style="margin-top: 20px; color: #4a5568; line-height: 1.6;">
+                <strong>Tips:</strong><br>
+                • Make sure to use exactly three double quotes: """<br>
+                • Each question must have 4 choices (A, B, C, D)<br>
+                • The answer must be a single capital letter<br>
+                • Separate multiple questions with a blank line
+            </p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
