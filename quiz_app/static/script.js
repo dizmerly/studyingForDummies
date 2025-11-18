@@ -1,3 +1,19 @@
+
+
+// Display code 
+function formatTripleCodeBlocks(text) {
+    return text.replace(
+        /"""CODE"""([\s\S]*?)"""CODE"""/g,
+        (match, code) => {
+            const escaped = code
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+            
+            return `<pre class="code-block"><code>${escaped}</code></pre>`;
+        }
+    );
+}
 (function() {
 'use strict';
 
@@ -149,7 +165,6 @@ async function loadQuestion() {
         alert(`Failed to load question: ${error.message}`);
     }
 }
-
 // Display question on screen
 function displayQuestion(data) {
     showScreen('quizScreen');
@@ -159,9 +174,18 @@ function displayQuestion(data) {
     document.getElementById('progressFill').style.width = progress + '%';
     document.getElementById('progressText').textContent = 
         `Question ${data.current} of ${data.total} | Score: ${data.score}/${data.current - 1}`;
+    
+    // Format question text (including code blocks)
+    let questionText = data.question;
 
-    // Update question text
-    document.getElementById('questionText').textContent = data.question;
+    // If question contains a CODE block, do NOT run parseEscapeSequences
+    if (!questionText.includes('"""CODE"""')) {
+        questionText = parseEscapeSequences(questionText);
+    }
+    questionText = formatTripleCodeBlocks(questionText);
+    
+    document.getElementById('questionText').innerHTML = questionText;
+
 
     // Create choices
     const container = document.getElementById('choicesContainer');

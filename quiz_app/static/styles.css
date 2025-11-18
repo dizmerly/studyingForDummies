@@ -1,3 +1,6 @@
+/* FIXME add proper darkmode setting*/
+
+
 * {
     margin: 0;
     padding: 0;
@@ -5,7 +8,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
@@ -13,7 +16,7 @@ body {
 }
 
 body.light-mode {
-    background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
+    background: linear-gradient(135deg, #12a1ff 0%, #3f2b96 100%);
 }
 
 /* Fixed header with controls */
@@ -200,18 +203,30 @@ body.light-mode button:hover {
 body.light-mode .question-card {
     background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
 }
-
+.code-block {
+    white-space: pre;
+    background: #1e1e1e;
+    color: #dcdcdc;
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: Consolas, monospace;
+    font-size: 14px;
+    margin-top: 10px;
+}
 .keyboard-hint {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    background: rgba(102, 126, 234, 0.1);
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 14px 22px; /* Balanced padding */
+    border-radius: 10px;
+    background: rgba(102, 126, 234, 0.12);
+    border: 1px solid rgba(102, 126, 234, 0.25);
     color: #667eea;
-    padding: 8px 15px;
-    border-radius: 8px;
     font-size: 13px;
+    line-height: 1.6;
     font-weight: 600;
-    border: 1px solid rgba(102, 126, 234, 0.2);
+    text-align: center;
     transition: all 0.3s ease;
 }
 
@@ -223,7 +238,7 @@ body.light-mode .keyboard-hint {
 
 .keyboard-hint kbd {
     background: white;
-    padding: 3px 8px;
+    padding: 2px 8px;
     border-radius: 4px;
     border: 1px solid #e2e8f0;
     font-family: monospace;
@@ -249,6 +264,30 @@ body.light-mode .keyboard-hint kbd {
 
 body.light-mode .question-text {
     color: #1a202c;
+}
+
+/* Code blocks in questions */
+.question-text pre {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 15px 0;
+    font-family: "Courier New", "Consolas", monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.question-text code {
+    font-family: "Courier New", "Consolas", monospace;
+    white-space: pre;
+}
+
+body.light-mode .question-text pre {
+    background: #1a202c;
+    color: #f7fafc;
 }
 
 .choice {
@@ -330,14 +369,26 @@ body.light-mode .choice label {
 }
 
 @keyframes pulse-green {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
 }
 
 @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
 }
 
 body.light-mode .choice.correct-answer {
@@ -443,7 +494,7 @@ textarea {
     padding: 18px;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
-    font-family: 'Courier New', monospace;
+    font-family: "Courier New", monospace;
     font-size: 14px;
     margin: 20px 0;
     resize: vertical;
@@ -472,8 +523,12 @@ textarea:focus {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .modal.active {

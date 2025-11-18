@@ -122,6 +122,12 @@
 
 """QUESTION"""
 The question text goes here.
+
+For code questions, wrap code in """CODE""" blocks:
+"""CODE"""
+your code here
+"""CODE"""
+
 """CHOICES"""
 A: ...
 B: ...
@@ -129,6 +135,24 @@ C: ...
 D: ...
 """ANSWER"""
 A-D (single capital letter only)
+
+Example with code:
+"""QUESTION"""
+What does this code print?
+"""CODE"""
+int main() {
+    int x = 5;
+    cout << x * 2;
+    return 0;
+}
+"""CODE"""
+"""CHOICES"""
+A: 5
+B: 10
+C: 25
+D: 0
+"""ANSWER"""
+B
 
 Repeat these blocks back-to-back with no extra whitespace, bullets, or added formatting.</textarea>
             
@@ -139,6 +163,9 @@ Repeat these blocks back-to-back with no extra whitespace, bullets, or added for
                 • The answer must be a single capital letter<br>
                 • Separate multiple questions with a blank line
             </p>
+            <div class="keyboard-hint">
+                Use <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> or <kbd>A</kbd><kbd>B</kbd><kbd>C</kbd><kbd>D</kbd> to select • <kbd>Enter</kbd> or <kbd>Space</kbd> to submit
+            </div>
         </div>
     </div>
 
