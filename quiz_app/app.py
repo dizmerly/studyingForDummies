@@ -261,5 +261,10 @@ def preferences():
         else:
             return jsonify({'error': 'Failed to save preferences'}), 500
 
+# if __name__ == '__main__':
+#     app.run(debug=True, port=5001, host='127.0.0.1')
 if __name__ == '__main__':
-    app.run(debug=True, port=5001, host='127.0.0.1')
+    # Render uses PORT environment variable
+    import os
+    port = int(os.environ.get('PORT', 5001))
+    app.run(debug=False, host='0.0.0.0', port=port)
