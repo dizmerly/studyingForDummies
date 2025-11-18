@@ -9,14 +9,18 @@ logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here-change-this-to-something-random'
 
-# Enable CORS for all routes
-CORS(app, supports_credentials=True, resources={
-    r"/*": {
-        "origins": "*",
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
-    }
-})
+# Session configuration
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_TYPE'] = 'filesystem'
+
+# Enable CORS - Allow all origins for development
+CORS(app, 
+     supports_credentials=True, 
+     resources={r"/*": {"origins": "*"}},
+     allow_headers=["Content-Type"],
+     methods=["GET", "POST", "OPTIONS"])
 
 # Configuration
 UPLOAD_FOLDER = './uploads'
@@ -44,10 +48,13 @@ def save_prefs(prefs):
         return False
 
 # Routes
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     """Serve the main page"""
-    return render_template('index.html')
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        return f"Error loading page: {str(e)}", 500
 
 @app.route('/api/upload', methods=['POST', 'OPTIONS'])
 def upload_file():
@@ -255,4 +262,4 @@ def preferences():
             return jsonify({'error': 'Failed to save preferences'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000, host='127.0.0.1')
+    app.run(debug=True, port=5001, host='127.0.0.1')

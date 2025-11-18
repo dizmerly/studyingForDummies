@@ -80,6 +80,7 @@ body.light-mode .nav-btn {
     padding: 50px;
     margin: 80px auto 40px;
     min-height: calc(100vh - 160px);
+    transition: background 0.3s ease;
 }
 
 body.light-mode .container {
@@ -92,6 +93,11 @@ h1 {
     font-size: 42px;
     margin-bottom: 15px;
     font-weight: 700;
+    transition: color 0.3s ease;
+}
+
+body.light-mode h1 {
+    color: #1a202c;
 }
 
 .subtitle {
@@ -99,6 +105,11 @@ h1 {
     color: #718096;
     font-size: 20px;
     margin-bottom: 50px;
+    transition: color 0.3s ease;
+}
+
+body.light-mode .subtitle {
+    color: #4a5568;
 }
 
 .btn-group {
@@ -131,6 +142,15 @@ button:hover {
 
 button:active {
     transform: translateY(-1px);
+}
+
+/* Dark mode button styles */
+body.light-mode button {
+    background: #4c51bf;
+}
+
+body.light-mode button:hover {
+    background: #434190;
 }
 
 .file-input {
@@ -173,6 +193,49 @@ button:active {
     border-radius: 15px;
     margin: 30px 0;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    position: relative;
+    transition: background 0.3s ease;
+}
+
+body.light-mode .question-card {
+    background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+}
+
+.keyboard-hint {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    transition: all 0.3s ease;
+}
+
+body.light-mode .keyboard-hint {
+    background: rgba(255, 255, 255, 0.9);
+    color: #4c51bf;
+    border: 1px solid rgba(76, 81, 191, 0.3);
+}
+
+.keyboard-hint kbd {
+    background: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    font-family: monospace;
+    font-size: 12px;
+    margin: 0 2px;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+body.light-mode .keyboard-hint kbd {
+    background: #f7fafc;
+    border: 1px solid #cbd5e0;
 }
 
 .question-text {
@@ -181,6 +244,11 @@ button:active {
     color: #2d3748;
     margin-bottom: 30px;
     line-height: 1.7;
+    transition: color 0.3s ease;
+}
+
+body.light-mode .question-text {
+    color: #1a202c;
 }
 
 .choice {
@@ -220,6 +288,66 @@ button:active {
     font-size: 17px;
     color: #2d3748;
     line-height: 1.6;
+    transition: color 0.3s ease;
+}
+
+/* Dark mode choice styles */
+body.light-mode .choice {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: #cbd5e0;
+}
+
+body.light-mode .choice:hover {
+    border-color: #4c51bf;
+    background: rgba(255, 255, 255, 1);
+}
+
+body.light-mode .choice.selected {
+    border-color: #4c51bf;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    box-shadow: 0 4px 12px rgba(76, 81, 191, 0.3);
+}
+
+body.light-mode .choice input[type="radio"] {
+    accent-color: #4c51bf;
+}
+
+body.light-mode .choice label {
+    color: #1a202c;
+}
+
+/* Answer feedback colors */
+.choice.correct-answer {
+    background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%) !important;
+    border-color: #48bb78 !important;
+    animation: pulse-green 0.5s ease;
+}
+
+.choice.wrong-answer {
+    background: linear-gradient(135deg, #fed7d7 0%, #fc8181 100%) !important;
+    border-color: #f56565 !important;
+    animation: shake 0.5s ease;
+}
+
+@keyframes pulse-green {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+body.light-mode .choice.correct-answer {
+    background: linear-gradient(135deg, #9ae6b4 0%, #68d391 100%) !important;
+    border-color: #38a169 !important;
+}
+
+body.light-mode .choice.wrong-answer {
+    background: linear-gradient(135deg, #fc8181 0%, #f56565 100%) !important;
+    border-color: #e53e3e !important;
 }
 
 /* Feedback messages */
@@ -261,6 +389,11 @@ button:active {
     border-radius: 15px;
     margin: 40px 0;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s ease;
+}
+
+body.light-mode .results-score {
+    background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
 }
 
 .score-number {
@@ -268,6 +401,11 @@ button:active {
     font-weight: 700;
     color: #2d3748;
     margin-bottom: 20px;
+    transition: color 0.3s ease;
+}
+
+body.light-mode .score-number {
+    color: #1a202c;
 }
 
 .percentage {
@@ -279,11 +417,23 @@ button:active {
     background-clip: text;
 }
 
+body.light-mode .percentage {
+    background: linear-gradient(135deg, #4c51bf 0%, #553c9a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
 .message {
     font-size: 24px;
     color: #4a5568;
     margin: 30px 0;
     font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+body.light-mode .message {
+    color: #2d3748;
 }
 
 /* Modals */
@@ -406,10 +556,20 @@ textarea:focus {
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
+body.light-mode .history-item {
+    background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+    border-left-color: #4c51bf;
+}
+
 .history-date {
     font-size: 14px;
     color: #718096;
     margin-bottom: 10px;
+    transition: color 0.3s ease;
+}
+
+body.light-mode .history-date {
+    color: #4a5568;
 }
 
 .history-score {
@@ -417,17 +577,32 @@ textarea:focus {
     font-weight: 700;
     color: #2d3748;
     margin-bottom: 8px;
+    transition: color 0.3s ease;
+}
+
+body.light-mode .history-score {
+    color: #1a202c;
 }
 
 .history-details {
     font-size: 16px;
     color: #4a5568;
+    transition: color 0.3s ease;
+}
+
+body.light-mode .history-details {
+    color: #2d3748;
 }
 
 .empty-state {
     text-align: center;
     padding: 60px 20px;
     color: #718096;
+    transition: color 0.3s ease;
+}
+
+body.light-mode .empty-state {
+    color: #4a5568;
 }
 
 .empty-state-icon {

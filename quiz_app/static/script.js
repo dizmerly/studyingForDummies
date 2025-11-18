@@ -1,9 +1,22 @@
+(function() {
+'use strict';
+
 // API Configuration
 const API_BASE = '/api';
 
 // Application state
 let totalQuestions = 0;
 let quizStartTime = null;
+let keyboardShortcutsEnabled = false;
+
+// Keyboard shortcuts functions
+function enableKeyboardShortcuts() {
+    keyboardShortcutsEnabled = true;
+}
+
+function disableKeyboardShortcuts() {
+    keyboardShortcutsEnabled = false;
+}
 
 // Theme toggle
 function toggleTheme() {
@@ -178,6 +191,9 @@ function displayQuestion(data) {
 
     document.getElementById('feedback').textContent = '';
     document.getElementById('feedback').className = 'feedback';
+    
+    // Enable keyboard shortcuts for this question
+    enableKeyboardShortcuts();
 }
 
 // Select answer choice
@@ -186,6 +202,51 @@ function selectChoice(letter, choiceDiv) {
     choiceDiv.classList.add('selected');
     document.getElementById('choice' + letter).checked = true;
 }
+
+// Global keyboard event listener
+document.addEventListener('keydown', (event) => {
+    // Don't interfere with typing in textareas or inputs
+    if (event.target.tagName === 'TEXTAREA' || event.target.tagName === 'INPUT') {
+        return;
+    }
+    
+    // Only work when quiz screen is active and shortcuts are enabled
+    const quizScreen = document.getElementById('quizScreen');
+    if (quizScreen.classList.contains('hidden') || !keyboardShortcutsEnabled) {
+        return;
+    }
+    
+    const key = event.key.toLowerCase();
+    
+    // Number keys 1-4 select choices A-D
+    if (key >= '1' && key <= '4') {
+        event.preventDefault();
+        const letters = ['A', 'B', 'C', 'D'];
+        const letter = letters[parseInt(key) - 1];
+        const choiceElement = document.getElementById('choice' + letter);
+        if (choiceElement) {
+            const choiceDiv = choiceElement.closest('.choice');
+            selectChoice(letter, choiceDiv);
+        }
+    }
+    
+    // Letter keys A-D also select choices
+    if (key === 'a' || key === 'b' || key === 'c' || key === 'd') {
+        event.preventDefault();
+        const letter = key.toUpperCase();
+        const choiceElement = document.getElementById('choice' + letter);
+        if (choiceElement) {
+            const choiceDiv = choiceElement.closest('.choice');
+            selectChoice(letter, choiceDiv);
+        }
+    }
+    
+    // Enter or Space submits the answer
+    if (key === 'enter' || key === ' ') {
+        event.preventDefault();
+        checkAnswer();
+    }
+});
 
 // Check answer with server
 async function checkAnswer() {
@@ -199,6 +260,9 @@ async function checkAnswer() {
     }
 
     const answer = selectedRadio.value;
+    
+    // Disable keyboard shortcuts while processing
+    disableKeyboardShortcuts();
 
     try {
         const response = await fetch(`${API_BASE}/answer`, {
@@ -215,12 +279,19 @@ async function checkAnswer() {
         if (response.ok) {
             const feedback = document.getElementById('feedback');
 
+            // Highlight correct and incorrect answers
+            const correctChoiceDiv = document.getElementById('choice' + data.correct_answer).closest('.choice');
+            const selectedChoiceDiv = selectedRadio.closest('.choice');
+
             if (data.correct) {
                 feedback.textContent = '✓ Correct!';
                 feedback.className = 'feedback correct';
+                selectedChoiceDiv.classList.add('correct-answer');
             } else {
                 feedback.textContent = `✗ Incorrect. The correct answer is ${data.correct_answer}`;
                 feedback.className = 'feedback incorrect';
+                selectedChoiceDiv.classList.add('wrong-answer');
+                correctChoiceDiv.classList.add('correct-answer');
             }
 
             setTimeout(async () => {
@@ -232,9 +303,11 @@ async function checkAnswer() {
             }, 800);
         } else {
             alert(`Error: ${data.error}`);
+            enableKeyboardShortcuts(); // Re-enable on error
         }
     } catch (error) {
         alert(`Failed to check answer: ${error.message}`);
+        enableKeyboardShortcuts(); // Re-enable on error
     }
 }
 
@@ -386,3 +459,20 @@ async function loadNewQuiz() {
         alert(`Failed to reset: ${error.message}`);
     }
 }
+
+// Make functions globally accessible for HTML onclick handlers
+window.toggleTheme = toggleTheme;
+window.showHelp = showHelp;
+window.closeHelpModal = closeHelpModal;
+window.showPasteModal = showPasteModal;
+window.closePasteModal = closePasteModal;
+window.handleFileUpload = handleFileUpload;
+window.submitPastedText = submitPastedText;
+window.showStartScreen = showStartScreen;
+window.showHistoryScreen = showHistoryScreen;
+window.checkAnswer = checkAnswer;
+window.restartQuiz = restartQuiz;
+window.loadNewQuiz = loadNewQuiz;
+window.clearHistory = clearHistory;
+
+})(); // End of IIFE wrapper
