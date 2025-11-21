@@ -101,6 +101,40 @@ export const api = {
         });
     },
 
+    // AI Settings
+    async saveApiKey(apiKey) {
+        return fetchWithCredentials(`${API_BASE}/settings/api-key`, {
+            method: 'POST',
+            body: JSON.stringify({ apiKey }),
+        });
+    },
+
+    async checkApiKey() {
+        return fetchWithCredentials(`${API_BASE}/settings/api-key`);
+    },
+
+    async deleteApiKey() {
+        return fetchWithCredentials(`${API_BASE}/settings/api-key`, {
+            method: 'DELETE',
+        });
+    },
+
+    // AI Generation
+    async generateQuizWithAI(notes, numQuestions = 10, difficulty = 'medium') {
+        return fetchWithCredentials(`${API_BASE}/ai/generate-quiz`, {
+            method: 'POST',
+            body: JSON.stringify({ notes, numQuestions, difficulty }),
+        });
+    },
+
+    async chatWithAssistant(message, context = '', history = []) {
+        return fetchWithCredentials(`${API_BASE}/ai/chat`, {
+            method: 'POST',
+            body: JSON.stringify({ message, context, history }),
+        });
+    },
+
+    // History
     async getHistory() {
         return fetchWithCredentials(`${API_BASE}/history`);
     },

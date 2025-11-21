@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, HelpCircle, X, LogOut } from 'lucide-react';
+import { History, HelpCircle, X, LogOut, Settings } from 'lucide-react';
 import AuthScreen from './components/AuthScreen';
 import StartScreen from './components/StartScreen';
 import LandingScreen from './components/LandingScreen';
 import QuizScreen from './components/QuizScreen';
 import ResultsScreen from './components/ResultsScreen';
 import HistoryScreen from './components/HistoryScreen';
+import SettingsScreen from './components/SettingsScreen';
 import ThemeToggle from './components/ThemeToggle';
 import { api } from './services/api';
 
@@ -97,6 +98,13 @@ function App() {
             {user && (
               <>
                 <button
+                  onClick={() => setScreen('settings')}
+                  className="icon-btn"
+                  title="Settings"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+                <button
                   onClick={() => setScreen('history')}
                   className="icon-btn"
                   title="History"
@@ -158,6 +166,9 @@ function App() {
             )}
             {screen === 'history' && (
               <HistoryScreen key="history" onBack={() => setScreen('landing')} />
+            )}
+            {screen === 'settings' && (
+              <SettingsScreen key="settings" onBack={() => setScreen('landing')} />
             )}
           </AnimatePresence>
         </main>

@@ -70,7 +70,7 @@ export default function AuthScreen({ onLogin }) {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full pl-10"
+                                className="w-full input-with-icon"
                                 placeholder="your@email.com"
                                 required
                                 autoFocus
@@ -88,7 +88,7 @@ export default function AuthScreen({ onLogin }) {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-10"
+                                className="w-full input-with-icon"
                                 placeholder={isLogin ? 'Enter password' : 'Min. 6 characters'}
                                 required
                                 minLength={6}
