@@ -2,7 +2,10 @@ from flask import Flask, render_template, request, jsonify, session
 from flask_cors import CORS
 import os
 import json
-from quiz_logic import load_questions, load_questions_from_text
+from quiz_logic import load_questions, load_questions_from_text, QuizError
+from database import (create_user, authenticate_user, save_quiz_result, get_user_history,
+                      save_api_key, get_api_key, has_api_key, delete_api_key)
+from ai_service import generate_quiz_from_notes, chat_with_assistant, AIServiceError
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -46,6 +49,80 @@ def save_prefs(prefs):
         return True
     except:
         return False
+
+# Authentication Routes
+@app.route('/api/auth/signup', methods=['POST'])
+def signup():
+    """Create a new user account."""
+    data = request.get_json()
+    email = data.get('email', '').strip()
+    password = data.get('password', '')
+    
+    if not email or not password:
+        return jsonify({'error': 'Email and password are required'}), 400
+    
+    if len(password) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters'}), 400
+    
+    result = create_user(email, password)
+    
+    if result['success']:
+        session['user_id'] = result['user_id']
+        session['email'] = result['email']
+        return jsonify({
+            'success': True,
+            'user': {'id': result['user_id'], 'email': result['email']}
+        })
+    else:
+        return jsonify({'error': result['message']}), 400
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    """Authenticate a user."""
+    data = request.get_json()
+    email = data.get('email', '').strip()
+    password = data.get('password', '')
+    
+    if not email or not password:
+        return jsonify({'error': 'Email and password are required'}), 400
+    
+    result = authenticate_user(email, password)
+    
+    if result['success']:
+        session['user_id'] = result['user_id']
+        session['email'] = result['email']
+        return jsonify({
+            'success': True,
+            'user': {'id': result['user_id'], 'email': result['email']}
+        })
+    else:
+        return jsonify({'error': result['message']}), 401
+
+@app.route('/api/auth/logout', methods=['POST'])
+def logout():
+    """Log out the current user."""
+    session.clear()
+    return jsonify({'success': True})
+
+@app.route('/api/auth/me', methods=['GET'])
+def get_current_user():
+    """Get the current logged-in user."""
+    if 'user_id' in session:
+        return jsonify({
+            'authenticated': True,
+            'user': {'id': session['user_id'], 'email': session['email']}
+        })
+    else:
+        return jsonify({'authenticated': False})
+
+@app.route('/api/history', methods=['GET'])
+def get_history():
+    """Get quiz history for the current user."""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    history = get_user_history(session['user_id'])
+    return jsonify({'history': history})
 
 # Routes
 @app.route('/', methods=['GET'])
@@ -94,6 +171,8 @@ def upload_file():
             'total_questions': len(questions)
         })
     
+    except QuizError as e:
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -126,6 +205,8 @@ def paste_text():
             'total_questions': len(questions)
         })
     
+    except QuizError as e:
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -260,6 +341,134 @@ def preferences():
             return jsonify({'success': True})
         else:
             return jsonify({'error': 'Failed to save preferences'}), 500
+
+
+# API Key Management Routes
+@app.route('/api/settings/api-key', methods=['POST'])
+def save_user_api_key():
+    """Save user's OpenAI API key."""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    api_key = data.get('apiKey', '').strip()
+    
+    if not api_key:
+        return jsonify({'error': 'API key is required'}), 400
+    
+    if not api_key.startswith('sk-'):
+        return jsonify({'error': 'Invalid API key format'}), 400
+    
+    success = save_api_key(session['user_id'], api_key)
+    
+    if success:
+        return jsonify({'success': True})
+    else:
+        return jsonify({'error': 'Failed to save API key'}), 500
+
+
+@app.route('/api/settings/api-key', methods=['GET'])
+def check_user_api_key():
+    """Check if user has API key configured."""
+    if 'user_id' not in session:
+        return jsonify({'hasKey': False})
+    
+    has_key = has_api_key(session['user_id'])
+    return jsonify({'hasKey': has_key})
+
+
+@app.route('/api/settings/api-key', methods=['DELETE'])
+def delete_user_api_key():
+    """Delete user's API key."""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    success = delete_api_key(session['user_id'])
+    
+    if success:
+        return jsonify({'success': True})
+    else:
+        return jsonify({'error': 'Failed to delete API key'}), 500
+
+
+# AI Generation Routes
+@app.route('/api/ai/generate-quiz', methods=['POST'])
+def ai_generate_quiz():
+    """Generate quiz from notes using AI."""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    # Get user's API key
+    api_key = get_api_key(session['user_id'])
+    if not api_key:
+        return jsonify({'error': 'No API key configured. Please add your OpenAI API key in settings.'}), 400
+    
+    data = request.get_json()
+    notes = data.get('notes', '').strip()
+    num_questions = data.get('numQuestions', 10)
+    difficulty = data.get('difficulty', 'medium')
+    
+    if not notes:
+        return jsonify({'error': 'Notes are required'}), 400
+    
+    try:
+        # Generate quiz using AI
+        quiz_text = generate_quiz_from_notes(notes, api_key, num_questions, difficulty)
+        
+        # Parse the generated quiz
+        questions = load_questions_from_text(quiz_text)
+        
+        # Store in session
+        session['questions'] = questions
+        session['current_index'] = 0
+        session['score'] = 0
+        session['answers'] = []
+        
+        return jsonify({
+            'success': True,
+            'totalQuestions': len(questions)
+        })
+    except AIServiceError as e:
+        return jsonify({'error': str(e)}), 400
+    except QuizError as e:
+        return jsonify({'error': f'Quiz validation failed: {str(e)}'}), 400
+    except Exception as e:
+        logging.error(f"AI quiz generation error: {str(e)}")
+        return jsonify({'error': 'Failed to generate quiz. Please try again.'}), 500
+
+
+@app.route('/api/ai/chat', methods=['POST'])
+def ai_chat():
+    """Chat with AI study assistant."""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    # Get user's API key
+    api_key = get_api_key(session['user_id'])
+    if not api_key:
+        return jsonify({'error': 'No API key configured'}), 400
+    
+    data = request.get_json()
+    message = data.get('message', '').strip()
+    context = data.get('context', '')
+    history = data.get('history', [])
+    
+    if not message:
+        return jsonify({'error': 'Message is required'}), 400
+    
+    try:
+        result = chat_with_assistant(message, context, api_key, history)
+        return jsonify({
+            'success': True,
+            'response': result['response'],
+            'history': result['updated_history']
+        })
+    except AIServiceError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logging.error(f"AI chat error: {str(e)}")
+        return jsonify({'error': 'Failed to get response. Please try again.'}), 500
+
 
 # if __name__ == '__main__':
 #     app.run(debug=True, port=5001, host='127.0.0.1')

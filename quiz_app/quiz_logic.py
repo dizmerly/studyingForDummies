@@ -1,188 +1,223 @@
-from decimal import InvalidContext
 import re
+import logging
+import random
+from typing import List, Tuple, Dict, Optional, Any
 
+# Configure logging
+logger = logging.getLogger(__name__)
 
-# Question regex grabber, make sure that the regex is greedy enough
-# but not too greedy because otherwise following questions get swallowed 
+class QuizError(Exception):
+    """Custom exception for quiz-related errors."""
+    pass
+
+# Regex patterns
+# The negative lookahead ensures we don't match across question boundaries
 BLOCK_RE = re.compile(
-    r'"""QUESTION"""\s*(.*?)\s*'
-    r'"""CHOICES"""\s*(.*?)\s*'
-    r'"""ANSWER"""\s*([A-D][^\n]*)',      # <- entire answer line
-    re.DOTALL | re.I
+    r'"""QUESTION"""\s*'
+    r'((?:(?!"""QUESTION"""|"""CHOICES""").)*?)'  # Question text - stop at next block marker
+    r'"""CHOICES"""\s*'
+    r'((?:(?!"""QUESTION"""|"""ANSWER""").)*?)'  # Choices text - stop at next block marker
+    r'"""ANSWER"""\s*'
+    r'([A-D][^\n]*)',  # Answer line
+    re.DOTALL | re.IGNORECASE
 )
 
-def parse_choices(choices_text: str):
-    """Return list [('A', text), ...]  (upper-case letters)."""
-    return [(m.group(1).upper(), m.group(2).strip())
-            for m in re.finditer(r'([A-D]):\s*(.+)', choices_text, re.I)]
+CHOICE_RE = re.compile(r'([A-D]):\s*(.+)', re.IGNORECASE)
+ANSWER_LETTER_RE = re.compile(r'\b([A-D])\b', re.IGNORECASE)
 
-# FIXME add shuffle function in order to shuffle questions on subsequent attempts 
-# or on any attempt
-def shuffle_questions(questions):
-    return 
-    
-def valid_block(question: str, choices: list[tuple[str, str]], answer_letter: str):
-    """Return (True, '') or (False, reason)."""
-    if not question:
-        return False, "missing question text"
-    if len(choices) < 2:
-        return False, "fewer than two choices"
-    present = {letter for letter, _ in choices}
-    if answer_letter not in present:
-        return False, f"answer '{answer_letter}' is not one of the choices"
-    return True, ""
-
-
-
-# ---------- driver ----------
-def load_questions(file_path: str):
+def parse_choices(choices_text: str) -> List[Tuple[str, str]]:
     """
-    Load and parse questions from a file.
+    Parse choices text into a list of tuples (letter, text).
     
     Args:
-        file_path: Path to the quiz file
+        choices_text: The raw text containing choices (e.g., "A: Choice 1\nB: Choice 2")
+        
+    Returns:
+        List of tuples like [('A', 'Choice 1'), ('B', 'Choice 2')]
+    """
+    return [(m.group(1).upper(), m.group(2).strip())
+            for m in CHOICE_RE.finditer(choices_text)]
+
+def validate_block(question: str, choices: List[Tuple[str, str]], answer_letter: str) -> Tuple[bool, str]:
+    """
+    Validate a single question block.
     
     Returns:
-        List of question dictionaries with keys: 'question', 'choices', 'answer'
-    
-    Raises:
-        FileNotFoundError: If file doesn't exist
-        ValueError: If no valid questions found
+        Tuple (is_valid, error_message)
     """
-    with open(file_path, encoding="utf-8") as f:
-        content = f.read()
+    if not question or not question.strip():
+        return False, "Missing question text"
+    if len(choices) < 2:
+        return False, f"Fewer than two choices found (found {len(choices)})"
     
+    # Check for empty choice text
+    for letter, text in choices:
+        if not text or not text.strip():
+            return False, f"Choice {letter} has no text"
+    
+    present_letters = {letter for letter, _ in choices}
+    if answer_letter not in present_letters:
+        return False, f"Answer '{answer_letter}' is not among the parsed choices ({', '.join(sorted(present_letters))})"
+        
+    return True, ""
+
+def parse_quiz_content(content: str) -> List[Dict[str, Any]]:
+    """
+    Core logic to parse quiz content string into a list of question dictionaries.
+    
+    Args:
+        content: The full text content of the quiz file/input.
+        
+    Returns:
+        List of question dictionaries.
+        
+    Raises:
+        QuizError: If no valid questions are found.
+    """
     matches = BLOCK_RE.findall(content)
     
     if not matches:
-        raise ValueError("No questions found in file")
+        logger.warning("Regex found no matches in content.")
+        raise QuizError("No questions found. Please check the file format.")
     
     questions = []
+    errors = []
     
     for i, match in enumerate(matches, start=1):
-        question_text = match[0].strip()
-        choices_text = match[1]
-        answer_line = match[2].strip()
-        
-        # Parse choices
-        choices = parse_choices(choices_text)
-        
-        # Extract answer letter
-        answer_m = re.search(r'\b([A-D])\b', answer_line, re.I)
-        if not answer_m:
-            print(f"Warning: Question {i} skipped - no answer letter found")
-            continue
-        
-        correct_letter = answer_m.group(1).upper()
-        
-        # Validate block
-        ok, reason = valid_block(question_text, choices, correct_letter)
-        
-        if ok:
-            questions.append({
-                'question': question_text,
-                'choices': choices,
-                'answer': correct_letter
-            })
-        else:
-            print(f"Warning: Question {i} skipped - {reason}")
-    
+        try:
+            question_text = match[0].strip()
+            choices_text = match[1]
+            answer_line = match[2].strip()
+            
+            # Parse choices
+            choices = parse_choices(choices_text)
+            
+            # Extract answer letter
+            answer_m = ANSWER_LETTER_RE.search(answer_line)
+            if not answer_m:
+                errors.append(f"Question {i}: No valid answer letter (A-D) found in '{answer_line}'")
+                continue
+            
+            correct_letter = answer_m.group(1).upper()
+            
+            # Validate block
+            is_valid, reason = validate_block(question_text, choices, correct_letter)
+            
+            if is_valid:
+                questions.append({
+                    'question': question_text,
+                    'choices': choices,
+                    'answer': correct_letter
+                })
+            else:
+                errors.append(f"Question {i}: {reason}")
+                
+        except Exception as e:
+            errors.append(f"Question {i}: Unexpected error during parsing - {str(e)}")
+
+    if errors:
+        for err in errors:
+            logger.warning(err)
+            
     if not questions:
-        raise ValueError("No valid questions found in file")
-    
+        error_msg = "No valid questions could be parsed.\n" + "\n".join(errors[:5])
+        if len(errors) > 5:
+            error_msg += f"\n...and {len(errors) - 5} more errors."
+        raise QuizError(error_msg)
+        
+    logger.info(f"Successfully parsed {len(questions)} questions.")
     return questions
 
-def load_questions_from_text(text):
+def shuffle_questions(questions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Parse quiz questions directly from pasted text.
-    Returns list of question dicts (same as load_questions).
+    Shuffle the order of questions.
+    Returns a new list, does not modify in-place.
     """
-    from io import StringIO
-    f = StringIO(text)
-    content = f.read()
-    
-    # reuse the same parsing logic as load_questions
-    matches = BLOCK_RE.findall(content)
-    questions = []
-    for i, match in enumerate(matches, start=1):
-        question_text = match[0].strip()
-        choices_text = match[1]
-        answer_line = match[2].strip()
-        
-        choices = parse_choices(choices_text)
-        answer_m = re.search(r'\b([A-D])\b', answer_line, re.I)
-        if not answer_m:
-            continue
-        correct_letter = answer_m.group(1).upper()
-        
-        ok, reason = valid_block(question_text, choices, correct_letter)
-        if ok:
-            questions.append({
-                'question': question_text,
-                'choices': choices,
-                'answer': correct_letter
-            })
-    return questions
+    shuffled = questions.copy()
+    random.shuffle(shuffled)
+    return shuffled
+
+def load_questions(file_path: str) -> List[Dict[str, Any]]:
+    """
+    Load and parse questions from a file.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return parse_quiz_content(content)
+    except FileNotFoundError:
+        raise QuizError(f"File not found: {file_path}")
+    except PermissionError:
+        raise QuizError(f"Permission denied reading file: {file_path}")
+    except Exception as e:
+        if isinstance(e, QuizError):
+            raise
+        raise QuizError(f"Error reading file: {str(e)}")
+
+def load_questions_from_text(text: str) -> List[Dict[str, Any]]:
+    """
+    Parse quiz questions directly from text string.
+    """
+    if not text or not text.strip():
+        raise QuizError("Empty text provided")
+    return parse_quiz_content(text)
 
 # ---------- Console Quiz Runner (Optional) ----------
 def run_console_quiz(file_path: str):
     """
     Run an interactive console-based quiz.
-    This is separate from load_questions so the GUI can use load_questions alone.
     """
-    questions = load_questions(file_path)
+    try:
+        questions = load_questions(file_path)
+        # Optional: Shuffle for console quiz too
+        questions = shuffle_questions(questions)
+    except QuizError as e:
+        print(f"Error loading quiz: {e}")
+        return
+
     score = 0
+    total = len(questions)
     
     print(f"\n{'='*50}")
-    print(f"Quiz loaded with {len(questions)} questions")
+    print(f"Quiz loaded with {total} questions")
     print(f"{'='*50}\n")
     
-    for i, q in enumerate(questions, start=1):
-        print(f"\nQuestion {i}: {q['question']}")
-        for letter, text in q['choices']:
-            print(f"{letter}: {text}")
-        
-        while True:
-            user_ans = input("Your answer (A/B/C/D or Q to quit): ").strip().upper()
-            if user_ans in {'A', 'B', 'C', 'D', 'Q'}:
+    try:
+        for i, q in enumerate(questions, start=1):
+            print(f"\nQuestion {i}: {q['question']}")
+            for letter, text in q['choices']:
+                print(f"{letter}: {text}")
+            
+            while True:
+                user_ans = input("Your answer (A/B/C/D or Q to quit): ").strip().upper()
+                if user_ans in {'A', 'B', 'C', 'D', 'Q'}:
+                    break
+                print("Invalid choice. Please enter A, B, C, D, or Q.")
+            
+            if user_ans == 'Q':
+                print("\nQuiz aborted.")
                 break
-            print("Invalid choice. Please enter A, B, C, D, or Q.")
-        
-        if user_ans == 'Q':
-            print("\nQuiz aborted.")
-            break
-        
-        if user_ans == q['answer']:
-            print("✓ Correct!")
-            score += 1
-        else:
-            print(f"✗ Incorrect. Correct answer: {q['answer']}")
+            
+            if user_ans == q['answer']:
+                print("✓ Correct!")
+                score += 1
+            else:
+                print(f"✗ Incorrect. Correct answer: {q['answer']}")
+                
+    except KeyboardInterrupt:
+        print("\nQuiz interrupted.")
     
     print(f"\n{'='*50}")
-    print(f"Final Score: {score}/{i}")
+    print(f"Final Score: {score}/{total}")
     print(f"{'='*50}\n")
 
-# ---------- For testing this module directly ----------
 if __name__ == "__main__":
     import sys
     
-    print("Quiz Logic Module")
-    print("=" * 50)
+    # Configure logging to console for standalone run
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     
     if len(sys.argv) > 1:
-        # If a file is provided as argument, run console quiz
-        try:
-            run_console_quiz(sys.argv[1])
-        except Exception as e:
-            print(f"Error: {e}")
+        run_console_quiz(sys.argv[1])
     else:
-        print("\nUsage:")
-        print("  python quiz_logic.py <quiz_file.txt>  - Run console quiz")
-        print("\nOr import in your GUI:")
-        print("  from quiz_logic import load_questions")
-        print("\nFunctions available:")
-        print("  - parse_choices(text)")
-        print("  - valid_block(question, choices, answer)")
-        print("  - load_questions(file_path) -> returns list of question dicts")
-        print("  - run_console_quiz(file_path) -> runs interactive console quiz")
-
+        print("Usage: python quiz_logic.py <quiz_file.txt>")
