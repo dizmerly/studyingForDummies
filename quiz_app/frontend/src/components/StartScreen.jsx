@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Upload, FileText, Loader2 } from 'lucide-react';
+import { Upload, FileText, Loader2, Sparkles } from 'lucide-react';
 import { api } from '../services/api';
 import { motion } from 'framer-motion';
 
-export default function StartScreen({ onQuizStart }) {
+export default function StartScreen({ onQuizStart, onAIGenerate }) {
     const [loading, setLoading] = useState(false);
     const [pasteMode, setPasteMode] = useState(false);
     const [text, setText] = useState('');
@@ -91,6 +91,28 @@ export default function StartScreen({ onQuizStart }) {
                         <FileText />
                         <span>Paste Text</span>
                     </button>
+
+                    {onAIGenerate && (
+                        <>
+                            <div className="divider">
+                                <div className="divider-line"></div>
+                                <div className="divider-text">Or</div>
+                            </div>
+
+                            <button
+                                onClick={onAIGenerate}
+                                className="btn w-full"
+                                style={{
+                                    background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)',
+                                    color: 'white',
+                                    border: 'none'
+                                }}
+                            >
+                                <Sparkles />
+                                <span>Generate with AI</span>
+                            </button>
+                        </>
+                    )}
                 </div>
             ) : (
                 <div className="flex flex-col gap-4 text-left">

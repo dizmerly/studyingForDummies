@@ -8,6 +8,7 @@ import QuizScreen from './components/QuizScreen';
 import ResultsScreen from './components/ResultsScreen';
 import HistoryScreen from './components/HistoryScreen';
 import SettingsScreen from './components/SettingsScreen';
+import AIGenerateScreen from './components/AIGenerateScreen';
 import ThemeToggle from './components/ThemeToggle';
 import { api } from './services/api';
 
@@ -156,7 +157,11 @@ function App() {
               />
             )}
             {screen === 'start' && (
-              <StartScreen key="start" onQuizStart={handleQuizStart} />
+              <StartScreen
+                key="start"
+                onQuizStart={handleQuizStart}
+                onAIGenerate={() => setScreen('ai-generate')}
+              />
             )}
             {screen === 'quiz' && (
               <QuizScreen key="quiz" onComplete={handleQuizComplete} />
@@ -169,6 +174,13 @@ function App() {
             )}
             {screen === 'settings' && (
               <SettingsScreen key="settings" onBack={() => setScreen('landing')} />
+            )}
+            {screen === 'ai-generate' && (
+              <AIGenerateScreen
+                key="ai-generate"
+                onQuizGenerated={() => setScreen('quiz')}
+                onBack={() => setScreen('start')}
+              />
             )}
           </AnimatePresence>
         </main>

@@ -6,6 +6,7 @@ import { api } from '../services/api';
 export default function SettingsScreen({ onBack }) {
     const [apiKey, setApiKey] = useState('');
     const [hasKey, setHasKey] = useState(false);
+    const [detectedProvider, setDetectedProvider] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -23,6 +24,14 @@ export default function SettingsScreen({ onBack }) {
         }
     };
 
+    const detectProvider = (key) => {
+        if (key.startsWith('sk-ant-')) return 'Claude (Anthropic)';
+        if (key.startsWith('AIza')) return 'Gemini (Google)';
+        if (key === 'ollama' || key.startsWith('ollama')) return 'Ollama (Local)';
+        if (key.startsWith('sk-')) return 'OpenAI (GPT)';
+        return 'Unknown';
+    };
+
     const handleSave = async (e) => {
         e.preventDefault();
         setError('');
@@ -31,10 +40,12 @@ export default function SettingsScreen({ onBack }) {
 
         try {
             await api.saveApiKey(apiKey);
-            setSuccess('API key saved successfully!');
+            const provider = detectProvider(apiKey);
+            setDetectedProvider(provider);
+            setSuccess(`API key saved successfully! Detected: ${provider}`);
             setHasKey(true);
             setApiKey('');
-            setTimeout(() => setSuccess(''), 3000);
+            setTimeout(() => setSuccess(''), 5000);
         } catch (err) {
             setError(err.message || 'Failed to save API key');
         } finally {
@@ -85,17 +96,17 @@ export default function SettingsScreen({ onBack }) {
                         <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0" />
                         <div className="text-sm">
                             <p className="mb-2">
-                                To use AI features (quiz generation and study assistant), you need an OpenAI API key.
+                                Enter your API key from any supported provider:
                             </p>
-                            <a
-                                href="https://platform.openai.com/api-keys"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary hover:underline inline-flex items-center gap-1"
-                            >
-                                Get your API key here
-                                <ExternalLink className="w-3 h-3" />
-                            </a>
+                            <ul className="list-disc list-inside space-y-1 mb-2">
+                                <li><strong>OpenAI</strong> (sk-...) - <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Get key</a></li>
+                                <li><strong>Claude</strong> (sk-ant-...) - <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Get key</a></li>
+                                <li><strong>Gemini</strong> (AIza...) - <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Get key</a></li>
+                                <li><strong>Ollama</strong> (ollama) - Free local AI, no key needed!</li>
+                            </ul>
+                            <p className="text-xs text-secondary">
+                                The app will auto-detect your provider based on the key format.
+                            </p>
                         </div>
                     </div>
 
