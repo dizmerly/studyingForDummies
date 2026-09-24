@@ -1,6 +1,6 @@
 # Studying For Dummies
 
-A small web app for turning study material into quizzes and practicing with immediate feedback. The app currently supports formatted quiz text and AI-generated multiple-choice quizzes.
+A small web app that is built to help Computer Science Students practice code reading problems. 
 
 ## Stack
 
