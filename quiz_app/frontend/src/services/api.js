@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5001/api';
+const API_BASE = '/api';
 
 const defaultHeaders = {
     'Content-Type': 'application/json',

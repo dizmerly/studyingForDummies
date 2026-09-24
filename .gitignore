@@ -1,6 +1,16 @@
+.venv
 venv
+env
 __pycache__
+.pytest_cache
+.ruff_cache
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
+quiz_app/uploads/
 .ropeproject
 dist
 build
-test.py

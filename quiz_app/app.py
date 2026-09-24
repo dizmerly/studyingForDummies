@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 import os
-import json
+from pathlib import Path
 from quiz_logic import load_questions, load_questions_from_text, QuizError
 from database import (create_user, authenticate_user, save_quiz_result, get_user_history,
                       save_api_key, get_api_key, has_api_key, delete_api_key)
@@ -9,8 +9,11 @@ from ai_service import generate_quiz_from_notes, chat_with_assistant, AIServiceE
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-app = Flask(__name__)
-app.secret_key = 'your-secret-key-here-change-this-to-something-random'
+APP_DIR = Path(__file__).resolve().parent
+FRONTEND_DIST = APP_DIR / 'frontend' / 'dist'
+
+app = Flask(__name__, static_folder=str(FRONTEND_DIST / 'assets'), static_url_path='/assets')
+app.secret_key = os.environ.get('SECRET_KEY', 'development-only-secret-key')
 
 # Session configuration
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -18,37 +21,18 @@ app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_TYPE'] = 'filesystem'
 
-# Enable CORS - Allow all origins for development
-CORS(app, 
-     supports_credentials=True, 
-     resources={r"/*": {"origins": "*"}},
-     allow_headers=["Content-Type"],
-     methods=["GET", "POST", "OPTIONS"])
+# Allow the local Vite server or a configured separately hosted frontend.
+CORS(
+    app,
+    supports_credentials=True,
+    resources={r"/api/*": {"origins": os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")}},
+    allow_headers=["Content-Type"],
+    methods=["GET", "POST", "DELETE", "OPTIONS"],
+)
 
 # Configuration
-UPLOAD_FOLDER = './uploads'
-USERDATA_FOLDER = './userdata'
+UPLOAD_FOLDER = str(APP_DIR / 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(USERDATA_FOLDER, exist_ok=True)
-
-PREF_FILE = os.path.join(USERDATA_FOLDER, 'prefs.json')
-
-def load_prefs():
-    if os.path.exists(PREF_FILE):
-        try:
-            with open(PREF_FILE, 'r') as f:
-                return json.load(f)
-        except:
-            return {}
-    return {}
-
-def save_prefs(prefs):
-    try:
-        with open(PREF_FILE, 'w') as f:
-            json.dump(prefs, f)
-        return True
-    except:
-        return False
 
 # Authentication Routes
 @app.route('/api/auth/signup', methods=['POST'])
@@ -127,11 +111,19 @@ def get_history():
 # Routes
 @app.route('/', methods=['GET'])
 def index():
-    """Serve the main page"""
-    try:
-        return render_template('index.html')
-    except Exception as e:
-        return f"Error loading page: {str(e)}", 500
+    """Serve the built React app."""
+    return send_from_directory(FRONTEND_DIST, 'index.html')
+
+
+@app.route('/<path:path>', methods=['GET'])
+def frontend_route(path):
+    """Serve React assets and let the client router handle app routes."""
+    if path.startswith('api/'):
+        return jsonify({'error': 'Not found'}), 404
+    requested_file = FRONTEND_DIST / path
+    if requested_file.is_file():
+        return send_from_directory(FRONTEND_DIST, path)
+    return send_from_directory(FRONTEND_DIST, 'index.html')
 
 @app.route('/api/upload', methods=['POST', 'OPTIONS'])
 def upload_file():
@@ -325,23 +317,6 @@ def reset_quiz():
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-@app.route('/api/prefs', methods=['GET', 'POST', 'OPTIONS'])
-def preferences():
-    """Get or set user preferences"""
-    if request.method == 'OPTIONS':
-        return '', 204
-        
-    if request.method == 'GET':
-        prefs = load_prefs()
-        return jsonify(prefs)
-    else:
-        data = request.get_json()
-        if save_prefs(data):
-            return jsonify({'success': True})
-        else:
-            return jsonify({'error': 'Failed to save preferences'}), 500
-
 
 # API Key Management Routes
 @app.route('/api/settings/api-key', methods=['POST'])

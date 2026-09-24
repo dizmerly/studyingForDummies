@@ -1,7 +1,6 @@
 import re
 import logging
-import random
-from typing import List, Tuple, Dict, Optional, Any
+from typing import List, Tuple, Dict, Any
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -128,15 +127,6 @@ def parse_quiz_content(content: str) -> List[Dict[str, Any]]:
     logger.info(f"Successfully parsed {len(questions)} questions.")
     return questions
 
-def shuffle_questions(questions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Shuffle the order of questions.
-    Returns a new list, does not modify in-place.
-    """
-    shuffled = questions.copy()
-    random.shuffle(shuffled)
-    return shuffled
-
 def load_questions(file_path: str) -> List[Dict[str, Any]]:
     """
     Load and parse questions from a file.
@@ -161,63 +151,3 @@ def load_questions_from_text(text: str) -> List[Dict[str, Any]]:
     if not text or not text.strip():
         raise QuizError("Empty text provided")
     return parse_quiz_content(text)
-
-# ---------- Console Quiz Runner (Optional) ----------
-def run_console_quiz(file_path: str):
-    """
-    Run an interactive console-based quiz.
-    """
-    try:
-        questions = load_questions(file_path)
-        # Optional: Shuffle for console quiz too
-        questions = shuffle_questions(questions)
-    except QuizError as e:
-        print(f"Error loading quiz: {e}")
-        return
-
-    score = 0
-    total = len(questions)
-    
-    print(f"\n{'='*50}")
-    print(f"Quiz loaded with {total} questions")
-    print(f"{'='*50}\n")
-    
-    try:
-        for i, q in enumerate(questions, start=1):
-            print(f"\nQuestion {i}: {q['question']}")
-            for letter, text in q['choices']:
-                print(f"{letter}: {text}")
-            
-            while True:
-                user_ans = input("Your answer (A/B/C/D or Q to quit): ").strip().upper()
-                if user_ans in {'A', 'B', 'C', 'D', 'Q'}:
-                    break
-                print("Invalid choice. Please enter A, B, C, D, or Q.")
-            
-            if user_ans == 'Q':
-                print("\nQuiz aborted.")
-                break
-            
-            if user_ans == q['answer']:
-                print("✓ Correct!")
-                score += 1
-            else:
-                print(f"✗ Incorrect. Correct answer: {q['answer']}")
-                
-    except KeyboardInterrupt:
-        print("\nQuiz interrupted.")
-    
-    print(f"\n{'='*50}")
-    print(f"Final Score: {score}/{total}")
-    print(f"{'='*50}\n")
-
-if __name__ == "__main__":
-    import sys
-    
-    # Configure logging to console for standalone run
-    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
-    
-    if len(sys.argv) > 1:
-        run_console_quiz(sys.argv[1])
-    else:
-        print("Usage: python quiz_logic.py <quiz_file.txt>")
