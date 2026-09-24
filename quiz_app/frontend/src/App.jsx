@@ -1,268 +1,116 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { History, HelpCircle, X, LogOut, Settings } from 'lucide-react';
-import AuthScreen from './components/AuthScreen';
-import StartScreen from './components/StartScreen';
-import LandingScreen from './components/LandingScreen';
-import QuizScreen from './components/QuizScreen';
-import ResultsScreen from './components/ResultsScreen';
-import HistoryScreen from './components/HistoryScreen';
-import SettingsScreen from './components/SettingsScreen';
-import AIGenerateScreen from './components/AIGenerateScreen';
-import ThemeToggle from './components/ThemeToggle';
-import { api } from './services/api';
+import './App.css';
 
-function App() {
-  const [screen, setScreen] = useState('landing'); // landing, start, quiz, results, history, auth
-  const [showHelp, setShowHelp] = useState(false);
-  const [user, setUser] = useState(null);
-  const [authChecked, setAuthChecked] = useState(false);
+const navigationLinks = [
+  { label: 'How it works', href: '/#how-it-works' },
+  { label: 'Features', href: '/#features' },
+  { label: 'Pricing', href: '/pricing.html' },
+];
 
-  // Check authentication on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const data = await api.checkAuth();
-        if (data.authenticated) {
-          setUser(data.user);
-        }
-      } catch (err) {
-        console.error('Auth check failed:', err);
-      } finally {
-        setAuthChecked(true);
-      }
-    };
-    checkAuth();
-  }, []);
-
-  const handleLogin = (userData) => {
-    setUser(userData);
-    setScreen('landing');
-  };
-
-  const handleLogout = async () => {
-    try {
-      await api.logout();
-      setUser(null);
-      setScreen('landing');
-    } catch (err) {
-      console.error('Logout failed:', err);
-    }
-  };
-
-  const handleQuizStart = () => {
-    setScreen('quiz');
-  };
-
-  const handleQuizComplete = () => {
-    setScreen('results');
-  };
-
-  const handleRestart = async () => {
-    try {
-      await api.restartQuiz();
-      setScreen('quiz');
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleNewQuiz = async () => {
-    try {
-      await api.resetQuiz();
-      setScreen('start');
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  if (!authChecked) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-secondary">Loading...</div>
-      </div>
-    );
-  }
-
+function SiteHeader() {
   return (
-    <div className="min-h-screen bg-background text-text transition-colors duration-300">
-      <div className="container relative">
-        {/* Header */}
-        <header className="flex justify-between items-center">
-          <button
-            onClick={() => setScreen('landing')}
-            className="logo-btn font-bold text-2xl"
-          >
-            StudyingFor<span className="gradient-text">Dummies</span>
-          </button>
-          <div className="flex items-center gap-3">
-            {user && (
-              <>
-                <button
-                  onClick={() => setScreen('settings')}
-                  className="icon-btn"
-                  title="Settings"
-                >
-                  <Settings className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setScreen('history')}
-                  className="icon-btn"
-                  title="History"
-                >
-                  <History className="w-5 h-5" />
-                </button>
-                <div className="text-sm text-secondary hidden sm:block">
-                  {user.email}
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="icon-btn"
-                  title="Logout"
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
-              </>
-            )}
-            {!user && (
-              <button
-                onClick={() => setScreen('auth')}
-                className="btn btn-primary"
-              >
-                Sign In
-              </button>
-            )}
-            <button
-              onClick={() => setShowHelp(true)}
-              className="icon-btn"
-              title="Help"
-            >
-              <HelpCircle className="w-5 h-5" />
-            </button>
-            <ThemeToggle />
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main>
-          <AnimatePresence mode="wait">
-            {screen === 'auth' && (
-              <AuthScreen key="auth" onLogin={handleLogin} />
-            )}
-            {screen === 'landing' && (
-              <LandingScreen
-                key="landing"
-                onStart={() => user ? setScreen('start') : setScreen('auth')}
-                onHistory={() => user ? setScreen('history') : setScreen('auth')}
-              />
-            )}
-            {screen === 'start' && (
-              <StartScreen
-                key="start"
-                onQuizStart={handleQuizStart}
-                onAIGenerate={() => setScreen('ai-generate')}
-              />
-            )}
-            {screen === 'quiz' && (
-              <QuizScreen key="quiz" onComplete={handleQuizComplete} />
-            )}
-            {screen === 'results' && (
-              <ResultsScreen key="results" onRestart={handleRestart} onHome={handleNewQuiz} />
-            )}
-            {screen === 'history' && (
-              <HistoryScreen key="history" onBack={() => setScreen('landing')} />
-            )}
-            {screen === 'settings' && (
-              <SettingsScreen key="settings" onBack={() => setScreen('landing')} />
-            )}
-            {screen === 'ai-generate' && (
-              <AIGenerateScreen
-                key="ai-generate"
-                onQuizGenerated={() => setScreen('quiz')}
-                onBack={() => setScreen('start')}
-              />
-            )}
-          </AnimatePresence>
-        </main>
-
-        {/* Help Modal */}
-        <AnimatePresence>
-          {showHelp && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
-              onClick={() => setShowHelp(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="card max-w-md w-full relative"
-                onClick={e => e.stopPropagation()}
-              >
-                <button
-                  onClick={() => setShowHelp(false)}
-                  className="absolute top-4 right-4 p-1 hover:bg-background rounded-full"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                <h2 className="text-xl font-bold mb-4">How to Use</h2>
-                <div className="space-y-4 text-secondary text-sm overflow-y-auto max-h-[60vh] pr-2">
-                  <p><strong>Format Instructions:</strong></p>
-                  <p>Your input file must strictly follow this format:</p>
-                  <div className="bg-background p-3 rounded-md font-mono text-xs border border-border whitespace-pre-wrap">
-                    {`"""QUESTION"""
-The question text goes here.
-
-For code questions, wrap code in """CODE""" blocks:
-"""CODE"""
-your code here
-"""CODE"""
-
-"""CHOICES"""
-A: ...
-B: ...
-C: ...
-D: ...
-"""ANSWER"""
-A-D (single capital letter only)`}
-                  </div>
-
-                  <p><strong>Example with Code:</strong></p>
-                  <div className="bg-background p-3 rounded-md font-mono text-xs border border-border whitespace-pre-wrap">
-                    {`"""QUESTION"""
-What does this code print?
-"""CODE"""
-int main() {
-    int x = 5;
-    cout << x * 2;
-    return 0;
+    <header className="site-header">
+      <a className="brand" href="/" aria-label="Studying For Dummies home">
+        <span className="brand-mark" aria-hidden="true">S</span>
+        <span>Studying For Dummies</span>
+      </a>
+      <nav className="main-navigation" aria-label="Main navigation">
+        {navigationLinks.map((link) => (
+          <a key={link.label} href={link.href}>{link.label}</a>
+        ))}
+      </nav>
+      <a className="login-link" href="/login.html">Log in</a>
+    </header>
+  );
 }
-"""CODE"""
-"""CHOICES"""
-A: 5
-B: 10
-C: 25
-D: 0
-"""ANSWER"""
-B`}
-                  </div>
-                  <p>
-                    <strong>Shortcuts:</strong>
-                    <br />• 1-4 or A-D: Select answer
-                    <br />• Enter/Space: Submit answer
-                  </p>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+
+function ImagePlaceholder({ className = '', label = 'Image placeholder' }) {
+  return (
+    <div className={`image-placeholder ${className}`} role="img" aria-label={label}>
+      <span className="placeholder-icon" aria-hidden="true">＋</span>
+      <span>{label}</span>
     </div>
   );
 }
 
-export default App;
+function LandingPage() {
+  return (
+    <>
+      <SiteHeader />
+      <main>
+        <section className="hero page-width">
+          <div className="hero-copy">
+            <p className="eyebrow"><span className="eyebrow-dot" /> A calmer way to study code</p>
+            <h1>Make code click.<br /><span>One question at a time.</span></h1>
+            <p className="hero-description">
+              Build confidence reading code with focused practice, helpful explanations, and quizzes made for computer science students.
+            </p>
+            <div className="hero-actions">
+              <a className="button button-primary" href="/login.html">Start practicing <span aria-hidden="true">↗</span></a>
+              <a className="text-link" href="#how-it-works">See how it works <span aria-hidden="true">↓</span></a>
+            </div>
+            <p className="hero-note">A little practice goes a long way.</p>
+          </div>
+          <div className="hero-art" aria-label="Study workspace image area">
+            <ImagePlaceholder className="hero-image" label="Add a study workspace image" />
+            <div className="floating-note"><span className="check-mark">✓</span><span><strong>Small steps.</strong><br />Real understanding.</span></div>
+            <span className="art-sparkle" aria-hidden="true">✳</span>
+          </div>
+        </section>
+
+        <section className="intro-band" id="how-it-works">
+          <div className="page-width intro-content">
+            <p className="eyebrow">Practice that makes sense</p>
+            <h2>Turn “I think I get it”<br />into <span>“I’ve got this.”</span></h2>
+            <p>Work through bite-sized code questions at your own pace. Learn from each answer, keep track of your progress, and come back stronger.</p>
+          </div>
+        </section>
+
+        <section className="features page-width" id="features">
+          <div className="section-heading">
+            <div><p className="eyebrow">Your study sidekick</p><h2>Less cramming.<br /><span>More understanding.</span></h2></div>
+            <p>Build a steady study habit with tools designed to make tricky topics feel manageable.</p>
+          </div>
+          <div className="feature-grid">
+            <article className="feature-card feature-card-large">
+              <div className="feature-copy"><span className="feature-number">01</span><h3>Practice by doing</h3><p>Answer code-reading questions and learn to follow what a program is really doing.</p></div>
+              <ImagePlaceholder className="feature-image" label="Add a code practice image" />
+            </article>
+            <article className="feature-card feature-card-green">
+              <span className="feature-number">02</span><span className="feature-icon" aria-hidden="true">↗</span>
+              <h3>Make it your own</h3><p>Bring a topic you’re working on and turn it into a focused practice session.</p>
+            </article>
+            <article className="feature-card feature-card-soft">
+              <span className="feature-number">03</span><span className="feature-icon" aria-hidden="true">◎</span>
+              <h3>See your progress</h3><p>Keep your practice history in one place and notice how far you’ve come.</p>
+            </article>
+          </div>
+        </section>
+
+        <section className="closing-callout page-width">
+          <div><p className="eyebrow">Ready when you are</p><h2>Let’s make your next<br />study session count.</h2><a className="button button-light" href="/login.html">Get started <span aria-hidden="true">↗</span></a></div>
+          <ImagePlaceholder className="closing-image" label="Add a student study image" />
+          <span className="closing-decoration" aria-hidden="true">✳</span>
+        </section>
+      </main>
+      <footer className="site-footer page-width"><a className="brand footer-brand" href="/">Studying For Dummies</a><p>Made for curious minds and future problem solvers.</p><a href="/pricing.html">Pricing</a></footer>
+    </>
+  );
+}
+
+function SimplePage({ title, description }) {
+  return <><SiteHeader /><main className="simple-page page-width"><p className="eyebrow">Studying For Dummies</p><h1>{title}</h1><p>{description}</p><a className="button button-primary" href="/">Back to home <span aria-hidden="true">↗</span></a><ImagePlaceholder className="simple-image" label="Page image placeholder" /></main></>;
+}
+
+export default function App() {
+  const currentPath = window.location.pathname;
+
+  if (currentPath.endsWith('/pricing.html')) {
+    return <SimplePage title="Simple plans for steady progress." description="Pricing details are coming soon. For now, explore the practice experience and see if it fits the way you study." />;
+  }
+
+  if (currentPath.endsWith('/login.html')) {
+    return <SimplePage title="Welcome back." description="The sign-in page is being prepared. Your next focused study session is just around the corner." />;
+  }
+
+  return <LandingPage />;
+}
