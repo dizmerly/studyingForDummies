@@ -55,7 +55,7 @@ For public use, review `ALLOWED_EMAILS`, the generation limit, and your provider
 
 SQLite has a `users` table containing a stable app ID, Google subject ID, verified email, display name, and creation time. No passwords are stored. The signed HTTP-only cookie holds only the app user ID. Practice sets, answer keys, and attempts stay in SQLite and are scoped to that ID. Saved sets persist until removed from the database.
 
-The input page accepts up to **5,000 characters** and a language name up to 60 characters. The backend enforces both limits. Generated sets contain a title, source metadata, settings, and validated questions. Student-facing responses omit correct answers and explanations until submission.
+The input page accepts up to **5,000 characters**, a language name up to 60 characters, and Easy, Medium, or Hard difficulty. The backend enforces these choices. Generated sets contain a title, source metadata, settings, and validated questions. Student-facing responses omit correct answers and explanations until submission.
 
 - `GET /api/auth/me`, `GET /api/auth/google`, `GET /api/auth/google/callback`, `POST /api/auth/logout`: account flow.
 - `GET /api/practice-sets`: list the signed-in user's saved sets.

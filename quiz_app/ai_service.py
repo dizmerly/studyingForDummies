@@ -18,6 +18,8 @@ Return one JSON object with schemaVersion 1, title, and questions. Each question
 id, type (code_output or code_tracing), prompt, code {language: the source language, text},
 choices (exactly four objects with unique id and text), answer {choiceId},
 explanation (concise step-by-step reasoning), difficulty (requested difficulty).
+For hard questions, require careful tracing across multiple steps or subtle state changes,
+while keeping the answer unambiguous and grounded in the source.
 Use one unambiguous correct answer. Preserve code whitespace and the supplied language. Do not invent
 unrelated code or material. Return exactly the requested number of questions.'''
 

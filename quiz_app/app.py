@@ -163,8 +163,8 @@ def generatePracticeSet():
     difficulty = settings.get('difficulty')
     if type(count) is not int or count < 3 or count > 5:
         return error('Choose 3 to 5 questions.')
-    if difficulty not in ('easy', 'medium'):
-        return error('Choose easy or medium difficulty.')
+    if difficulty not in ('easy', 'medium', 'hard'):
+        return error('Choose easy, medium, or hard difficulty.')
     cleanSource = {'text': text.strip(), 'title': title.strip(), 'language': language.strip()}
     cleanSettings = {'questionCount': count, 'difficulty': difficulty}
     try:

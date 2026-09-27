@@ -205,7 +205,7 @@ export default function PracticeApp({ theme, onToggleTheme }) {
               <p className="field-hint">{sourceText.length.toLocaleString()} / 5,000 characters. Avoid pasting private information.</p>
               <div className="form-row">
                 <div><label htmlFor="language">Language</label><input id="language" required maxLength="60" value={language} onChange={(event) => setLanguage(event.target.value)} placeholder="e.g. JavaScript, Java, C++" /></div>
-                <div><label htmlFor="difficulty">Difficulty</label><select id="difficulty" value={difficulty} onChange={(event) => setDifficulty(event.target.value)}><option value="easy">Easy</option><option value="medium">Medium</option></select></div>
+                <div><label htmlFor="difficulty">Difficulty</label><select id="difficulty" value={difficulty} onChange={(event) => setDifficulty(event.target.value)}><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div>
                 <div><label htmlFor="count">Questions</label><select id="count" value={questionCount} onChange={(event) => setQuestionCount(Number(event.target.value))}><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
               </div>
               <button className="button button-primary" type="submit" disabled={phase === 'generating'}>{phase === 'generating' ? 'Generating questions…' : 'Generate questions'}</button>
