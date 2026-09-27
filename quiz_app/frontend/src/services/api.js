@@ -20,6 +20,12 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  config() { return request('/config'); },
+  me() { return request('/auth/me'); },
+  demoLogin() { return request('/auth/demo', { method: 'POST' }); },
+  logout() { return request('/auth/logout', { method: 'POST' }); },
+  sample() { return request('/practice-sets/sample', { method: 'POST' }); },
+  listSets() { return request('/practice-sets'); },
   generate(source, settings) {
     return request('/practice-sets/generate', {
       method: 'POST', body: JSON.stringify({ source, settings }),

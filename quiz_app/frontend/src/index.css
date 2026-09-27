@@ -17,6 +17,22 @@
   --page-width: 1160px;
 }
 
+:root[data-theme='dark'] {
+  color: #ecf3ed;
+  background: #101611;
+  --green: #76d787;
+  --green-dark: #9be5a7;
+  --green-pale: #203a27;
+  --ink: #ecf3ed;
+  --muted: #b5c3b8;
+  --soft: #1a241c;
+  --white: #101611;
+  --surface: #1b271e;
+  --border: #3a5140;
+}
+
+:root:not([data-theme='dark']) { --surface: #fff; --border: #dce6dc; }
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { min-width: 320px; margin: 0; }

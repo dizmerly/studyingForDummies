@@ -1,13 +1,15 @@
+import { useEffect, useState } from 'react';
 import './App.css';
 import PracticeApp from './components/PracticeApp';
+import ThemeToggle from './components/ThemeToggle';
 
 const navigationLinks = [
   { label: 'How it works', href: '/#how-it-works' },
   { label: 'Features', href: '/#features' },
-  { label: 'Practice', href: '/practice' },
+  { label: 'Pricing', href: '/pricing' },
 ];
 
-function SiteHeader() {
+function SiteHeader({ theme, onToggle }) {
   return (
     <header className="site-header">
       <a className="brand" href="/" aria-label="Studying For Dummies home">
@@ -19,6 +21,7 @@ function SiteHeader() {
           <a key={link.label} href={link.href}>{link.label}</a>
         ))}
       </nav>
+      <ThemeToggle theme={theme} onToggle={onToggle} />
       <a className="login-link" href="/practice">Start practicing</a>
     </header>
   );
@@ -33,10 +36,10 @@ function ImagePlaceholder({ className = '', label = 'Image placeholder' }) {
   );
 }
 
-function LandingPage() {
+function LandingPage({ theme, onToggle }) {
   return (
     <>
-      <SiteHeader />
+      <SiteHeader theme={theme} onToggle={onToggle} />
       <main>
         <section className="hero page-width">
           <div className="hero-copy">
@@ -93,13 +96,48 @@ function LandingPage() {
           <span className="closing-decoration" aria-hidden="true">✳</span>
         </section>
       </main>
-      <footer className="site-footer page-width"><a className="brand footer-brand" href="/">Studying For Dummies</a><p>Made for curious minds and future problem solvers.</p><a href="/practice">Practice</a></footer>
+      <footer className="site-footer page-width"><a className="brand footer-brand" href="/">Studying For Dummies</a><p>Made for curious minds and future problem solvers.</p><a href="/pricing">Pricing</a></footer>
     </>
   );
 }
 
+const plans = [
+  { name: 'Free', description: 'Explore code-reading practice.', features: ['Create practice sets', 'Answer at your own pace', 'Review explanations'], action: 'Start practicing' },
+  { name: 'Monthly', description: 'For a steady study routine.', features: ['More monthly generations', 'Saved practice sets', 'Review previous attempts'], action: 'Explore practice' },
+  { name: 'Credits', description: 'For focused exam preparation.', features: ['Buy generations when needed', 'Use credits on your schedule', 'Keep your completed sets'], action: 'Explore practice' },
+];
+
+function PricingPage({ theme, onToggle }) {
+  return <><SiteHeader theme={theme} onToggle={onToggle} /><main className="pricing-page page-width">
+    <p className="eyebrow">Pricing</p><h1>Practice that fits your pace.</h1>
+    <p className="pricing-intro">Plans and prices are being worked out. Here’s the shape of what we’re considering.</p>
+    <div className="pricing-grid">{plans.map((plan) => <article className="pricing-card" key={plan.name}>
+      <p className="pricing-plan">{plan.name}</p><h2>{plan.description}</h2><p className="pricing-placeholder">Price coming soon</p>
+      <ul>{plan.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
+      <a className="button button-primary" href="/practice">{plan.action} <span aria-hidden="true">↗</span></a>
+    </article>)}</div>
+  </main></>;
+}
+
 export default function App() {
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const update = (event) => { if (!localStorage.getItem('theme')) setTheme(event.matches ? 'dark' : 'light'); };
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  const toggleTheme = () => setTheme((current) => {
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', next);
+    return next;
+  });
   const currentPath = window.location.pathname;
-  if (currentPath === '/practice') return <PracticeApp />;
-  return <LandingPage />;
+  if (currentPath === '/practice') return <PracticeApp theme={theme} onToggleTheme={toggleTheme} />;
+  if (currentPath === '/pricing') return <PricingPage theme={theme} onToggle={toggleTheme} />;
+  return <LandingPage theme={theme} onToggle={toggleTheme} />;
 }

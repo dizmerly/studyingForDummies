@@ -39,8 +39,12 @@ def validateSet(data, source, settings):
         if not isinstance(question.get('prompt'), str) or not question['prompt'].strip():
             raise PracticeError('A question prompt is missing.')
         code = question.get('code')
-        if not isinstance(code, dict) or code.get('language') != source['language'] or not isinstance(code.get('text'), str) or not code['text'].strip() or len(code['text']) > 5000:
+        if (not isinstance(code, dict) or not isinstance(code.get('language'), str)
+                or code['language'].casefold() != source['language'].casefold()
+                or not isinstance(code.get('text'), str) or not code['text'].strip()
+                or len(code['text']) > 5000):
             raise PracticeError('Every question needs a code snippet in the selected language.')
+        code['language'] = source['language']
         choices = question.get('choices')
         if not isinstance(choices, list) or len(choices) != 4:
             raise PracticeError('Every question needs four choices.')
