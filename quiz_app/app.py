@@ -14,7 +14,7 @@ from quiz_app.practice import PracticeError, createSet, feedback, getSet, progre
 APP_DIR = Path(__file__).resolve().parent
 FRONTEND_DIST = APP_DIR / 'frontend' / 'dist'
 app = Flask(__name__, static_folder=str(FRONTEND_DIST / 'assets'), static_url_path='/assets')
-app.secret_key = os.environ.get('SECRET_KEY', 'local-development-only-secret')
+app.secret_key = os.environ.get('SECRET_KEY') or 'local-development-only-secret'
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax',
                   SESSION_COOKIE_SECURE=os.environ.get('COOKIE_SECURE') == 'true',
                   MAX_CONTENT_LENGTH=16 * 1024)
@@ -30,6 +30,11 @@ def ownerId():
 
 def error(message, status=400):
     return jsonify({'error': message}), status
+
+
+@app.errorhandler(413)
+def requestTooLarge(_error):
+    return error('Request is too large. Keep source under 8,000 characters.', 413)
 
 
 @app.post('/api/practice-sets/generate')

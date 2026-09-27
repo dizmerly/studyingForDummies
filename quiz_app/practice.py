@@ -8,9 +8,13 @@ import os
 import sqlite3
 import time
 import uuid
+from contextlib import contextmanager
 from pathlib import Path
 
-DATABASE_PATH = Path(os.environ.get('PRACTICE_DB_PATH', Path(__file__).resolve().parent / 'practice.sqlite3'))
+APP_DIR = Path(__file__).resolve().parent
+DATABASE_PATH = Path(os.environ.get('PRACTICE_DB_PATH', 'practice.sqlite3'))
+if not DATABASE_PATH.is_absolute():
+    DATABASE_PATH = APP_DIR / DATABASE_PATH
 SESSION_LIFETIME = 24 * 60 * 60
 
 
@@ -66,14 +70,19 @@ def validateSet(data, source, settings):
     }
 
 
+@contextmanager
 def connect():
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(DATABASE_PATH)
     connection.row_factory = sqlite3.Row
-    connection.execute('''CREATE TABLE IF NOT EXISTS practiceSets (
-        id TEXT PRIMARY KEY, ownerId TEXT NOT NULL, data TEXT NOT NULL,
-        attempts TEXT NOT NULL, createdAt INTEGER NOT NULL)''')
-    return connection
+    try:
+        with connection:
+            connection.execute('''CREATE TABLE IF NOT EXISTS practiceSets (
+                id TEXT PRIMARY KEY, ownerId TEXT NOT NULL, data TEXT NOT NULL,
+                attempts TEXT NOT NULL, createdAt INTEGER NOT NULL)''')
+            yield connection
+    finally:
+        connection.close()
 
 
 def createSet(ownerId, practiceSet):

@@ -1,5 +1,4 @@
 """Contract and lifecycle checks for the anonymous practice API."""
-import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,6 +6,7 @@ from unittest.mock import patch
 
 from quiz_app import practice
 from quiz_app import app as appModule
+from quiz_app import ai_service
 
 
 SET = {
@@ -66,6 +66,15 @@ class PracticeTests(unittest.TestCase):
             response = self.client.post('/api/practice-sets/generate', json={'source': SOURCE, 'settings': SETTINGS})
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json['error'], 'Provider unavailable')
+
+    def test_malformed_generation_retries_once(self):
+        message = type('Message', (), {'content': '{"schemaVersion":1,"questions":[]}'})()
+        response = type('Response', (), {'choices': [type('Choice', (), {'message': message})()]})()
+        with patch.dict('os.environ', {'OPENAI_API_KEY': 'test-key'}), patch.object(ai_service, 'OpenAI') as client:
+            client.return_value.chat.completions.create.return_value = response
+            with self.assertRaises(ai_service.AIServiceError):
+                ai_service.generateSet(SOURCE, SETTINGS)
+            self.assertEqual(client.return_value.chat.completions.create.call_count, 2)
 
 
 if __name__ == '__main__':
