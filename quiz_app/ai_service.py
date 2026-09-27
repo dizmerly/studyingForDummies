@@ -31,11 +31,11 @@ def generateSet(source, settings):
     for attempt in range(2):
         try:
             response = client.chat.completions.create(
-                model=os.environ.get('OPENAI_MODEL', 'gpt-4o-mini'),
+                model=os.environ.get('OPENAI_MODEL', 'gpt-6-luna'),
+                reasoning_effort=os.environ.get('OPENAI_REASONING_EFFORT', 'medium'),
                 response_format={'type': 'json_object'},
-                messages=[{'role': 'system', 'content': SYSTEM_INSTRUCTION},
+                messages=[{'role': 'developer', 'content': SYSTEM_INSTRUCTION},
                           {'role': 'user', 'content': prompt + ('\nPrevious output was invalid. Repair the JSON and follow every requirement.' if attempt else '')}],
-                temperature=0.3,
             )
             data = json.loads(response.choices[0].message.content or '')
             return validateSet(data, source, settings)

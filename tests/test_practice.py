@@ -75,6 +75,11 @@ class PracticeTests(unittest.TestCase):
             with self.assertRaises(ai_service.AIServiceError):
                 ai_service.generateSet(SOURCE, SETTINGS)
             self.assertEqual(client.return_value.chat.completions.create.call_count, 2)
+            request = client.return_value.chat.completions.create.call_args.kwargs
+            self.assertEqual(request['model'], 'gpt-6-luna')
+            self.assertEqual(request['reasoning_effort'], 'medium')
+            self.assertNotIn('temperature', request)
+            self.assertEqual(request['messages'][0]['role'], 'developer')
 
 
 if __name__ == '__main__':

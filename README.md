@@ -32,7 +32,7 @@ npm run dev
 
 Open the URL printed by Vite, usually `http://localhost:5173`. The development server forwards `/api` to Flask at `127.0.0.1:5001`. To serve the built frontend from Flask, run `npm run build` in `quiz_app/frontend` and open `http://127.0.0.1:5001`.
 
-For a public deployment, decide on spending limits and abuse controls before using a shared paid key. Set a unique `SECRET_KEY`, use HTTPS with `COOKIE_SECURE=true`, and keep `OPENAI_API_KEY` on the server. `PRACTICE_DB_PATH` can override the default `quiz_app/practice.sqlite3`. `FRONTEND_ORIGIN` defaults to `http://localhost:5173`; `PORT` defaults to `5001`. `OPENAI_MODEL` defaults to `gpt-4o-mini`.
+For a public deployment, decide on spending limits and abuse controls before using a shared paid key. Set a unique `SECRET_KEY`, use HTTPS with `COOKIE_SECURE=true`, and keep `OPENAI_API_KEY` on the server. `PRACTICE_DB_PATH` can override the default `quiz_app/practice.sqlite3`. `FRONTEND_ORIGIN` defaults to `http://localhost:5173`; `PORT` defaults to `5001`. `OPENAI_MODEL` defaults to `gpt-6-luna`, with `OPENAI_REASONING_EFFORT=medium`.
 
 ## Practice API
 
