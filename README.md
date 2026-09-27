@@ -1,10 +1,10 @@
 # Studying For Dummies
 
-A small local app for practicing Python code reading. Paste code or notes, generate 3–5 questions with OpenAI, answer them one at a time, and review your result. No account is needed. Practice sets expire after 24 hours and are not saved as history.
+A code-reading practice app. Sign in with Google, paste code or notes in any programming language, generate 3–5 questions, and review explanations. Practice sets and attempts are saved per user in SQLite.
 
 ## Run locally
 
-Requires Python 3.10+ and Node.js 20+. A server-managed OpenAI API key is required for generation.
+Requires Python 3.10+ and Node.js 20+.
 
 ```sh
 python3 -m venv .venv
@@ -13,7 +13,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Set `OPENAI_API_KEY` and `SECRET_KEY` in `.env`, then load it into your shell. The app does not automatically load `.env`.
+Set `SECRET_KEY`, `OPENAI_API_KEY`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET` in `.env`. Register `http://localhost:5173/api/auth/google/callback` as an authorized redirect URI for your Google OAuth web application. Then run:
 
 ```sh
 set -a
@@ -30,29 +30,43 @@ npm install
 npm run dev
 ```
 
-Open the URL printed by Vite, usually `http://localhost:5173`. The development server forwards `/api` to Flask at `127.0.0.1:5001`. To serve the built frontend from Flask, run `npm run build` in `quiz_app/frontend` and open `http://127.0.0.1:5001`.
+Open `http://localhost:5173`. The development server forwards `/api` to Flask at `127.0.0.1:5001`.
 
-For a public deployment, decide on spending limits and abuse controls before using a shared paid key. Set a unique `SECRET_KEY`, use HTTPS with `COOKIE_SECURE=true`, and keep `OPENAI_API_KEY` on the server. `PRACTICE_DB_PATH` can override the default `quiz_app/practice.sqlite3`. `FRONTEND_ORIGIN` defaults to `http://localhost:5173`; `PORT` defaults to `5001`. `OPENAI_MODEL` defaults to `gpt-6-luna`, with `OPENAI_REASONING_EFFORT=medium`.
+To inspect the interface without Google credentials or OpenAI charges, set `LOCAL_DEMO_MODE=true` **only for local development**. The practice page offers a local demo account and a hand-authored Python sample set. This mode is restricted to loopback requests and does not send the sample to OpenAI.
 
-## Practice API
+## Configuration
 
-All routes use JSON and a signed, HTTP-only anonymous cookie. The cookie contains only an owner ID; questions, answers, and attempts stay in SQLite. The browser remembers only the set ID in local storage. A different browser session cannot read that set. Expired sets return 404.
+- `OPENAI_API_KEY`: server-side key for generated questions.
+- `OPENAI_MODEL`: defaults to `gpt-6-luna`.
+- `OPENAI_REASONING_EFFORT`: defaults to `medium`.
+- `SECRET_KEY`: long random secret for signed session cookies.
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: OAuth credentials.
+- `GOOGLE_REDIRECT_URI`: callback URL registered with Google. Defaults to the API origin plus `/api/auth/google/callback` if omitted; set it explicitly for Vite development.
+- `ALLOWED_EMAILS`: optional comma-separated list of Google emails allowed into the app. If empty, any verified Google account can sign in.
+- `DAILY_GENERATION_LIMIT`: maximum generated sets per user per UTC day; defaults to `10`. Failed generations do not count.
+- `PRACTICE_DB_PATH`: SQLite path; defaults to `quiz_app/practice.sqlite3`.
+- `FRONTEND_ORIGIN`: frontend URL for post-login redirect and CORS; defaults to `http://localhost:5173`.
+- `PORT`: Flask port; defaults to `5001`.
+- `COOKIE_SECURE`: set to `true` behind HTTPS.
 
-- `POST /api/practice-sets/generate` accepts `{ "source": { "text": "...", "title": "optional", "language": "python" }, "settings": { "difficulty": "easy", "questionCount": 3 } }`. Source is limited to 8,000 characters; difficulty can be `easy` or `medium`; count must be 3–5. Returns 201 with `{ id, title, progress, question }`.
-- `GET /api/practice-sets/<id>` returns `{ id, title, progress, question }`. After an answer it also returns `feedback` and `nextQuestion` so a refresh can show the explanation again.
-- `POST /api/practice-sets/<id>/answers` accepts `{ "questionId": "q1", "choiceId": "a" }` and returns `{ feedback, progress, nextQuestion }`. Repeating an answer returns the original feedback without changing the score. Questions must be answered in order.
-- `GET /api/practice-sets/<id>/results` returns `{ title, progress, missed }` after all questions are answered.
-- `POST /api/practice-sets/<id>/retry` clears attempts for that set and returns its first question.
+For public use, review `ALLOWED_EMAILS`, the generation limit, and your provider's project spend cap before allowing broad access to a shared paid API key. Keep `.env` and all credentials out of the repository.
 
-Generated sets use `schemaVersion: 1` and contain a title, source metadata, settings, and exactly the requested number of questions. Each question has a unique ID, `code_output` or `code_tracing` type, prompt, Python code, four unique choices, an internal answer choice ID, an explanation, and difficulty. Student-facing questions omit the answer and explanation until submission. The server rejects malformed generation and retries once.
+## Data and API
 
-## Checks
+SQLite has a `users` table containing a stable app ID, Google subject ID, verified email, display name, and creation time. No passwords are stored. The signed HTTP-only cookie holds only the app user ID. Practice sets, answer keys, and attempts stay in SQLite and are scoped to that ID. Saved sets persist until removed from the database.
 
-```sh
-python -m unittest discover -s tests -v
-cd quiz_app/frontend
-npm run lint
-npm run build
-```
+The input page accepts up to **5,000 characters** and a language name up to 60 characters. The backend enforces both limits. Generated sets contain a title, source metadata, settings, and validated questions. Student-facing responses omit correct answers and explanations until submission.
 
-The former account, upload, chat, history, and pricing features are outside this MVP.
+- `GET /api/auth/me`, `GET /api/auth/google`, `GET /api/auth/google/callback`, `POST /api/auth/logout`: account flow.
+- `GET /api/practice-sets`: list the signed-in user's saved sets.
+- `POST /api/practice-sets/generate`: generate a set from `{source: {text, title, language}, settings: {difficulty, questionCount}}`.
+- `GET /api/practice-sets/<id>`: resume a set.
+- `POST /api/practice-sets/<id>/answers`: submit one answer.
+- `GET /api/practice-sets/<id>/results`: completed results.
+- `POST /api/practice-sets/<id>/retry`: clear attempts and retry.
+
+With `LOCAL_DEMO_MODE=true`, `POST /api/auth/demo` signs into the local demo account and `POST /api/practice-sets/sample` saves a hand-authored three-card set. These routes are unavailable outside local demo mode.
+
+## UI
+
+The header links to Pricing. The pricing page is a template with Free, Monthly, and Credits sections; prices and billing are not implemented. The theme follows the device's light/dark preference until the user selects a theme with the header icon. That selection is saved in local storage.
