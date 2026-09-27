@@ -1,4 +1,4 @@
-"""Generate one structured Python code-reading set with OpenAI.
+"""Generate one structured code-reading set with OpenAI.
 
 The model sees only bounded study material. Validation is performed by practice.py;
 this module retries one malformed response and returns user-safe provider errors.
@@ -13,12 +13,12 @@ class AIServiceError(Exception):
     pass
 
 
-SYSTEM_INSTRUCTION = '''Create Python code-reading practice grounded only in the supplied source.
+SYSTEM_INSTRUCTION = '''Create code-reading practice grounded only in the supplied source.
 Return one JSON object with schemaVersion 1, title, and questions. Each question has:
-id, type (code_output or code_tracing), prompt, code {language: python, text},
+id, type (code_output or code_tracing), prompt, code {language: the source language, text},
 choices (exactly four objects with unique id and text), answer {choiceId},
 explanation (concise step-by-step reasoning), difficulty (requested difficulty).
-Use one unambiguous correct answer. Preserve code whitespace. Do not invent
+Use one unambiguous correct answer. Preserve code whitespace and the supplied language. Do not invent
 unrelated code or material. Return exactly the requested number of questions.'''
 
 
@@ -30,14 +30,16 @@ def generateSet(source, settings):
     prompt = json.dumps({'source': source, 'settings': settings})
     for attempt in range(2):
         try:
-            response = client.chat.completions.create(
+            response = client.responses.create(
                 model=os.environ.get('OPENAI_MODEL', 'gpt-6-luna'),
-                reasoning_effort=os.environ.get('OPENAI_REASONING_EFFORT', 'medium'),
-                response_format={'type': 'json_object'},
-                messages=[{'role': 'developer', 'content': SYSTEM_INSTRUCTION},
-                          {'role': 'user', 'content': prompt + ('\nPrevious output was invalid. Repair the JSON and follow every requirement.' if attempt else '')}],
+                reasoning={'effort': os.environ.get('OPENAI_REASONING_EFFORT', 'medium')},
+                text={'format': {'type': 'json_object'}},
+                instructions=SYSTEM_INSTRUCTION,
+                input=prompt + ('\nPrevious output was invalid. Repair the JSON and follow every requirement.' if attempt else ''),
+                max_output_tokens=6000,
+                store=False,
             )
-            data = json.loads(response.choices[0].message.content or '')
+            data = json.loads(response.output_text or '')
             return validateSet(data, source, settings)
         except (ValueError, KeyError, IndexError, TypeError, PracticeError):
             if attempt:

@@ -1,13 +1,10 @@
-"""Validate practice sets and keep anonymous attempts in SQLite.
-
-The browser receives only a signed anonymous ID and safe question fields. Full sets,
-answers, and feedback stay in the database; each query is scoped to that ID.
-"""
+"""Validate practice sets and keep each signed-in user's sets in SQLite."""
 import json
 import os
 import sqlite3
 import time
 import uuid
+from datetime import datetime, timezone
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -15,7 +12,6 @@ APP_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = Path(os.environ.get('PRACTICE_DB_PATH', 'practice.sqlite3'))
 if not DATABASE_PATH.is_absolute():
     DATABASE_PATH = APP_DIR / DATABASE_PATH
-SESSION_LIFETIME = 24 * 60 * 60
 
 
 class PracticeError(ValueError):
@@ -43,8 +39,8 @@ def validateSet(data, source, settings):
         if not isinstance(question.get('prompt'), str) or not question['prompt'].strip():
             raise PracticeError('A question prompt is missing.')
         code = question.get('code')
-        if not isinstance(code, dict) or code.get('language') != 'python' or not isinstance(code.get('text'), str) or not code['text'].strip() or len(code['text']) > 8000:
-            raise PracticeError('Every question needs a Python code snippet.')
+        if not isinstance(code, dict) or code.get('language') != source['language'] or not isinstance(code.get('text'), str) or not code['text'].strip() or len(code['text']) > 5000:
+            raise PracticeError('Every question needs a code snippet in the selected language.')
         choices = question.get('choices')
         if not isinstance(choices, list) or len(choices) != 4:
             raise PracticeError('Every question needs four choices.')
@@ -63,8 +59,8 @@ def validateSet(data, source, settings):
             raise PracticeError('Question difficulty does not match the request.')
     return {
         'schemaVersion': 1,
-        'title': (data.get('title') or source['title'] or 'Python code practice')[:120],
-        'source': {'title': source['title'], 'language': 'python'},
+        'title': (data.get('title') or source['title'] or f"{source['language']} code practice")[:120],
+        'source': {'title': source['title'], 'language': source['language']},
         'settings': settings,
         'questions': questions,
     }
@@ -80,6 +76,12 @@ def connect():
             connection.execute('''CREATE TABLE IF NOT EXISTS practiceSets (
                 id TEXT PRIMARY KEY, ownerId TEXT NOT NULL, data TEXT NOT NULL,
                 attempts TEXT NOT NULL, createdAt INTEGER NOT NULL)''')
+            connection.execute('''CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY, googleSub TEXT UNIQUE NOT NULL,
+                email TEXT NOT NULL, name TEXT NOT NULL, createdAt INTEGER NOT NULL)''')
+            connection.execute('''CREATE TABLE IF NOT EXISTS generationUsage (
+                userId TEXT NOT NULL, day TEXT NOT NULL, count INTEGER NOT NULL,
+                PRIMARY KEY (userId, day))''')
             yield connection
     finally:
         connection.close()
@@ -88,7 +90,6 @@ def connect():
 def createSet(ownerId, practiceSet):
     setId = uuid.uuid4().hex
     with connect() as connection:
-        connection.execute('DELETE FROM practiceSets WHERE createdAt < ?', (int(time.time()) - SESSION_LIFETIME,))
         connection.execute('INSERT INTO practiceSets VALUES (?, ?, ?, ?, ?)',
                            (setId, ownerId, json.dumps(practiceSet), '{}', int(time.time())))
     return setId
@@ -96,10 +97,10 @@ def createSet(ownerId, practiceSet):
 
 def getSet(ownerId, setId):
     with connect() as connection:
-        row = connection.execute('SELECT data, attempts FROM practiceSets WHERE id = ? AND ownerId = ? AND createdAt >= ?',
-                                 (setId, ownerId, int(time.time()) - SESSION_LIFETIME)).fetchone()
+        row = connection.execute('SELECT data, attempts FROM practiceSets WHERE id = ? AND ownerId = ?',
+                                 (setId, ownerId)).fetchone()
     if row is None:
-        raise PracticeError('Practice set not found or expired. Start a new set.')
+        raise PracticeError('Practice set not found.')
     return json.loads(row['data']), json.loads(row['attempts'])
 
 
@@ -111,10 +112,10 @@ def recordAnswer(ownerId, setId, questionId, choiceId):
     # A write lock makes duplicate submissions return the original feedback.
     with connect() as connection:
         connection.execute('BEGIN IMMEDIATE')
-        row = connection.execute('SELECT data, attempts FROM practiceSets WHERE id = ? AND ownerId = ? AND createdAt >= ?',
-                                 (setId, ownerId, int(time.time()) - SESSION_LIFETIME)).fetchone()
+        row = connection.execute('SELECT data, attempts FROM practiceSets WHERE id = ? AND ownerId = ?',
+                                 (setId, ownerId)).fetchone()
         if row is None:
-            raise PracticeError('Practice set not found or expired. Start a new set.')
+            raise PracticeError('Practice set not found.')
         practiceSet, attempts = json.loads(row['data']), json.loads(row['attempts'])
         questionIndex = next((index for index, item in enumerate(practiceSet['questions']) if item['id'] == questionId), None)
         if questionIndex is None:
@@ -147,7 +148,51 @@ def progress(practiceSet, attempts):
 
 def resetSet(ownerId, setId):
     with connect() as connection:
-        cursor = connection.execute('UPDATE practiceSets SET attempts = ? WHERE id = ? AND ownerId = ? AND createdAt >= ?',
-                                    ('{}', setId, ownerId, int(time.time()) - SESSION_LIFETIME))
+        cursor = connection.execute('UPDATE practiceSets SET attempts = ? WHERE id = ? AND ownerId = ?',
+                                    ('{}', setId, ownerId))
         if cursor.rowcount == 0:
-            raise PracticeError('Practice set not found or expired. Start a new set.')
+            raise PracticeError('Practice set not found.')
+
+
+def upsertUser(googleSub, email, name):
+    with connect() as connection:
+        row = connection.execute('SELECT id FROM users WHERE googleSub = ?', (googleSub,)).fetchone()
+        userId = row['id'] if row else uuid.uuid4().hex
+        connection.execute('''INSERT INTO users (id, googleSub, email, name, createdAt)
+            VALUES (?, ?, ?, ?, ?) ON CONFLICT(googleSub) DO UPDATE SET
+            email = excluded.email, name = excluded.name''',
+            (userId, googleSub, email, name, int(time.time())))
+    return userId
+
+
+def getUser(userId):
+    with connect() as connection:
+        row = connection.execute('SELECT id, email, name FROM users WHERE id = ?', (userId,)).fetchone()
+    return dict(row) if row else None
+
+
+def listSets(ownerId):
+    with connect() as connection:
+        rows = connection.execute('SELECT id, data, attempts, createdAt FROM practiceSets WHERE ownerId = ? ORDER BY createdAt DESC LIMIT 50',
+                                  (ownerId,)).fetchall()
+    return [{'id': row['id'], 'title': json.loads(row['data'])['title'],
+             'language': json.loads(row['data'])['source']['language'],
+             'progress': progress(json.loads(row['data']), json.loads(row['attempts'])),
+             'createdAt': row['createdAt']} for row in rows]
+
+
+def reserveGeneration(userId, dailyLimit):
+    day = datetime.now(timezone.utc).date().isoformat()
+    with connect() as connection:
+        connection.execute('BEGIN IMMEDIATE')
+        row = connection.execute('SELECT count FROM generationUsage WHERE userId = ? AND day = ?', (userId, day)).fetchone()
+        if row and row['count'] >= dailyLimit:
+            raise PracticeError(f'Daily generation limit reached ({dailyLimit}). Try again tomorrow.')
+        connection.execute('''INSERT INTO generationUsage (userId, day, count) VALUES (?, ?, 1)
+            ON CONFLICT(userId, day) DO UPDATE SET count = count + 1''', (userId, day))
+    return day
+
+
+def refundGeneration(userId, day):
+    with connect() as connection:
+        connection.execute('UPDATE generationUsage SET count = MAX(0, count - 1) WHERE userId = ? AND day = ?', (userId, day))
