@@ -1,141 +1,42 @@
-const API_BASE = '/api';
+const apiBase = '/api';
 
-const defaultHeaders = {
-    'Content-Type': 'application/json',
-};
-
-const fetchWithCredentials = async (url, options = {}) => {
-    const response = await fetch(url, {
-        ...options,
-        credentials: 'include',
-        headers: {
-            ...defaultHeaders,
-            ...options.headers,
-        },
+async function request(path, options = {}) {
+  let response;
+  try {
+    response = await fetch(`${apiBase}${path}`, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      ...options,
     });
+  } catch {
+    throw new Error('Could not reach the server. Check that the API is running.');
+  }
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Request failed');
-    }
-
-    return response.json();
-};
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || 'Something went wrong. Please try again.');
+  }
+  return data;
+}
 
 export const api = {
-    // Authentication
-    async checkAuth() {
-        return fetchWithCredentials(`${API_BASE}/auth/me`);
-    },
-
-    async login(email, password) {
-        return fetchWithCredentials(`${API_BASE}/auth/login`, {
-            method: 'POST',
-            body: JSON.stringify({ email, password }),
-        });
-    },
-
-    async signup(email, password) {
-        return fetchWithCredentials(`${API_BASE}/auth/signup`, {
-            method: 'POST',
-            body: JSON.stringify({ email, password }),
-        });
-    },
-
-    async logout() {
-        return fetchWithCredentials(`${API_BASE}/auth/logout`, {
-            method: 'POST',
-        });
-    },
-
-    // Quiz operations
-    async uploadFile(file) {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const response = await fetch(`${API_BASE}/upload`, {
-            method: 'POST',
-            body: formData,
-            credentials: 'include',
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Upload failed');
-        }
-
-        return response.json();
-    },
-
-    async pasteText(text) {
-        return fetchWithCredentials(`${API_BASE}/paste`, {
-            method: 'POST',
-            body: JSON.stringify({ text }),
-        });
-    },
-
-    async getQuestion() {
-        return fetchWithCredentials(`${API_BASE}/question`);
-    },
-
-    async checkAnswer(answer) {
-        return fetchWithCredentials(`${API_BASE}/answer`, {
-            method: 'POST',
-            body: JSON.stringify({ answer }),
-        });
-    },
-
-    async getResults() {
-        return fetchWithCredentials(`${API_BASE}/results`);
-    },
-
-    async restartQuiz() {
-        return fetchWithCredentials(`${API_BASE}/restart`, {
-            method: 'POST',
-        });
-    },
-
-    async resetQuiz() {
-        return fetchWithCredentials(`${API_BASE}/reset`, {
-            method: 'POST',
-        });
-    },
-
-    // AI Settings
-    async saveApiKey(apiKey) {
-        return fetchWithCredentials(`${API_BASE}/settings/api-key`, {
-            method: 'POST',
-            body: JSON.stringify({ apiKey }),
-        });
-    },
-
-    async checkApiKey() {
-        return fetchWithCredentials(`${API_BASE}/settings/api-key`);
-    },
-
-    async deleteApiKey() {
-        return fetchWithCredentials(`${API_BASE}/settings/api-key`, {
-            method: 'DELETE',
-        });
-    },
-
-    // AI Generation
-    async generateQuizWithAI(notes, numQuestions = 10, difficulty = 'medium') {
-        return fetchWithCredentials(`${API_BASE}/ai/generate-quiz`, {
-            method: 'POST',
-            body: JSON.stringify({ notes, numQuestions, difficulty }),
-        });
-    },
-
-    async chatWithAssistant(message, context = '', history = []) {
-        return fetchWithCredentials(`${API_BASE}/ai/chat`, {
-            method: 'POST',
-            body: JSON.stringify({ message, context, history }),
-        });
-    },
-
-    // History
-    async getHistory() {
-        return fetchWithCredentials(`${API_BASE}/history`);
-    },
+  generate(source, settings) {
+    return request('/practice-sets/generate', {
+      method: 'POST', body: JSON.stringify({ source, settings }),
+    });
+  },
+  getSet(setId) {
+    return request(`/practice-sets/${setId}`);
+  },
+  answer(setId, questionId, choiceId) {
+    return request(`/practice-sets/${setId}/answers`, {
+      method: 'POST', body: JSON.stringify({ questionId, choiceId }),
+    });
+  },
+  results(setId) {
+    return request(`/practice-sets/${setId}/results`);
+  },
+  retry(setId) {
+    return request(`/practice-sets/${setId}/retry`, { method: 'POST' });
+  },
 };

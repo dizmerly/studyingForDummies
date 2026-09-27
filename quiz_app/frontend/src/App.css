@@ -120,3 +120,55 @@ h1, h2, h3 { font-family: Manrope, sans-serif; letter-spacing: -1.7px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* Practice pages share the landing page's type and colors, with a narrow reading column. */
+.practice-shell { min-height: 100vh; background: #f7f9f7; }
+.practice-header { display: flex; align-items: center; justify-content: space-between; min-height: 78px; }
+.practice-main { max-width: 800px; padding-top: 48px; padding-bottom: 90px; }
+.practice-panel { padding: clamp(24px, 5vw, 48px); background: #fff; border: 1px solid #e5e9e5; border-radius: 20px; box-shadow: 0 15px 50px rgb(20 60 25 / 5%); }
+.practice-panel h1 { margin-bottom: 16px; font-size: clamp(29px, 4vw, 40px); line-height: 1.2; }
+.practice-panel h2 { font-size: 23px; letter-spacing: -0.7px; }
+.form-intro, .field-hint { color: var(--muted); line-height: 1.65; }
+.form-intro { max-width: 620px; }
+.source-form { display: grid; gap: 10px; margin-top: 28px; }
+.source-form label, .practice-panel legend { font-weight: 700; font-size: 14px; }
+.source-form label span { color: var(--muted); font-weight: 400; }
+.source-form input, .source-form textarea, .source-form select { width: 100%; padding: 12px 14px; color: var(--ink); background: #fff; border: 1px solid #bfc9c0; border-radius: 8px; font: inherit; }
+.source-form textarea, .code-block { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 14px; line-height: 1.6; }
+.source-form textarea { resize: vertical; }
+.source-form select:disabled { color: #555; background: #f2f4f2; }
+.field-hint { margin: 0 0 10px; font-size: 12px; }
+.form-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px; }
+.form-row > div { display: grid; gap: 10px; }
+.practice-panel .button { cursor: pointer; border: 0; }
+.button-outline { background: #fff; border: 1px solid #a8b4a9 !important; }
+button:disabled { cursor: not-allowed !important; opacity: 0.55; transform: none !important; box-shadow: none !important; }
+.text-button { padding: 8px; border: 0; background: none; color: #176c2b; font: inherit; font-weight: 700; cursor: pointer; }
+.question-top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.progress-label { flex-shrink: 0; color: var(--muted); font-size: 13px; }
+.progress-track { height: 8px; margin: 0 0 32px; background: #e5eee6; border-radius: 99px; overflow: hidden; }
+.progress-track span { display: block; height: 100%; background: var(--green); transition: width 200ms; }
+.code-block { overflow-x: auto; padding: 20px; color: #ecf6ec; background: #18251b; border-radius: 10px; white-space: pre; }
+.practice-panel fieldset { padding: 0; margin: 28px 0 22px; border: 0; }
+.choice-list { display: grid; gap: 10px; margin-top: 12px; }
+.choice { display: flex; gap: 14px; align-items: center; padding: 14px; border: 1px solid #cbd5cc; border-radius: 9px; cursor: pointer; }
+.choice.selected { border-color: #238b3b; background: #e9f8ec; }
+.choice input { accent-color: #238b3b; }
+.feedback { margin-top: 25px; padding: 22px; border-radius: 10px; line-height: 1.6; }
+.feedback.correct { background: #e9f8ec; }
+.feedback.incorrect { background: #fff3df; }
+.feedback h2 { margin-bottom: 8px; }
+.feedback .button { margin-top: 8px; }
+.error-message { padding: 13px 16px; color: #872522; background: #fff0ee; border: 1px solid #e6b4af; border-radius: 8px; }
+.score-line { font-size: 36px; font-weight: 800; color: #176c2b; }
+.review { margin: 36px 0; }
+.review article { padding: 22px 0; border-top: 1px solid #dfe5df; }
+.review article h3 { font-size: 18px; letter-spacing: -0.5px; }
+.result-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+:focus-visible { outline: 3px solid #176c2b; outline-offset: 3px; }
+@media (max-width: 600px) {
+  .practice-header { min-height: 68px; }
+  .practice-main { padding-top: 24px; }
+  .form-row { grid-template-columns: 1fr; }
+  .question-top { align-items: flex-start; flex-direction: column; gap: 0; }
+}

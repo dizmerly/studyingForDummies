@@ -1,9 +1,10 @@
 import './App.css';
+import PracticeApp from './components/PracticeApp';
 
 const navigationLinks = [
   { label: 'How it works', href: '/#how-it-works' },
   { label: 'Features', href: '/#features' },
-  { label: 'Pricing', href: '/pricing.html' },
+  { label: 'Practice', href: '/practice' },
 ];
 
 function SiteHeader() {
@@ -18,7 +19,7 @@ function SiteHeader() {
           <a key={link.label} href={link.href}>{link.label}</a>
         ))}
       </nav>
-      <a className="login-link" href="/login.html">Log in</a>
+      <a className="login-link" href="/practice">Start practicing</a>
     </header>
   );
 }
@@ -45,7 +46,7 @@ function LandingPage() {
               Build confidence reading code with focused practice, helpful explanations, and quizzes made for computer science students.
             </p>
             <div className="hero-actions">
-              <a className="button button-primary" href="/login.html">Start practicing <span aria-hidden="true">↗</span></a>
+              <a className="button button-primary" href="/practice">Start practicing <span aria-hidden="true">↗</span></a>
               <a className="text-link" href="#how-it-works">See how it works <span aria-hidden="true">↓</span></a>
             </div>
             <p className="hero-note">A little practice goes a long way.</p>
@@ -61,7 +62,7 @@ function LandingPage() {
           <div className="page-width intro-content">
             <p className="eyebrow">Practice that makes sense</p>
             <h2>Turn “I think I get it”<br />into <span>“I’ve got this.”</span></h2>
-            <p>Work through bite-sized code questions at your own pace. Learn from each answer, keep track of your progress, and come back stronger.</p>
+            <p>Work through bite-sized code questions at your own pace. Learn from each answer and see your score when you finish.</p>
           </div>
         </section>
 
@@ -81,36 +82,24 @@ function LandingPage() {
             </article>
             <article className="feature-card feature-card-soft">
               <span className="feature-number">03</span><span className="feature-icon" aria-hidden="true">◎</span>
-              <h3>See your progress</h3><p>Keep your practice history in one place and notice how far you’ve come.</p>
+              <h3>See your result</h3><p>Review missed questions and try the same set again.</p>
             </article>
           </div>
         </section>
 
         <section className="closing-callout page-width">
-          <div><p className="eyebrow">Ready when you are</p><h2>Let’s make your next<br />study session count.</h2><a className="button button-light" href="/login.html">Get started <span aria-hidden="true">↗</span></a></div>
+          <div><p className="eyebrow">Ready when you are</p><h2>Let’s make your next<br />study session count.</h2><a className="button button-light" href="/practice">Get started <span aria-hidden="true">↗</span></a></div>
           <ImagePlaceholder className="closing-image" label="Add a student study image" />
           <span className="closing-decoration" aria-hidden="true">✳</span>
         </section>
       </main>
-      <footer className="site-footer page-width"><a className="brand footer-brand" href="/">Studying For Dummies</a><p>Made for curious minds and future problem solvers.</p><a href="/pricing.html">Pricing</a></footer>
+      <footer className="site-footer page-width"><a className="brand footer-brand" href="/">Studying For Dummies</a><p>Made for curious minds and future problem solvers.</p><a href="/practice">Practice</a></footer>
     </>
   );
 }
 
-function SimplePage({ title, description }) {
-  return <><SiteHeader /><main className="simple-page page-width"><p className="eyebrow">Studying For Dummies</p><h1>{title}</h1><p>{description}</p><a className="button button-primary" href="/">Back to home <span aria-hidden="true">↗</span></a><ImagePlaceholder className="simple-image" label="Page image placeholder" /></main></>;
-}
-
 export default function App() {
   const currentPath = window.location.pathname;
-
-  if (currentPath.endsWith('/pricing.html')) {
-    return <SimplePage title="Simple plans for steady progress." description="Pricing details are coming soon. For now, explore the practice experience and see if it fits the way you study." />;
-  }
-
-  if (currentPath.endsWith('/login.html')) {
-    return <SimplePage title="Welcome back." description="The sign-in page is being prepared. Your next focused study session is just around the corner." />;
-  }
-
+  if (currentPath === '/practice') return <PracticeApp />;
   return <LandingPage />;
 }
