@@ -1,4 +1,5 @@
 """Validate practice sets and keep each signed-in user's sets in SQLite."""
+
 import json
 import os
 import sqlite3
@@ -21,52 +22,83 @@ class PracticeError(ValueError):
 def validateSet(data, source, settings):
     if not isinstance(data, dict) or data.get('schemaVersion') != 1:
         raise PracticeError('Generated set has an unsupported schema version.')
+
     if not isinstance(data.get('title'), str) or not data['title'].strip():
         raise PracticeError('Generated set needs a title.')
+
     questions = data.get('questions')
     if not isinstance(questions, list) or len(questions) != settings['questionCount']:
         raise PracticeError('Generated set has the wrong number of questions.')
+
     seenIds = set()
     for question in questions:
         if not isinstance(question, dict):
             raise PracticeError('A generated question is invalid.')
+
         questionId = question.get('id')
         if not isinstance(questionId, str) or not questionId.strip() or questionId in seenIds:
             raise PracticeError('Question IDs must be unique and nonempty.')
         seenIds.add(questionId)
+
         if question.get('type') not in ('code_output', 'code_tracing'):
             raise PracticeError('Only code output and tracing questions are supported.')
         if not isinstance(question.get('prompt'), str) or not question['prompt'].strip():
             raise PracticeError('A question prompt is missing.')
+
         code = question.get('code')
-        if (not isinstance(code, dict) or not isinstance(code.get('language'), str)
-                or code['language'].casefold() != source['language'].casefold()
-                or not isinstance(code.get('text'), str) or not code['text'].strip()
-                or len(code['text']) > 5000):
+        if (
+            not isinstance(code, dict)
+            or not isinstance(code.get('language'), str)
+            or code['language'].casefold() != source['language'].casefold()
+            or not isinstance(code.get('text'), str)
+            or not code['text'].strip()
+            or len(code['text']) > 5000
+        ):
             raise PracticeError('Every question needs a code snippet in the selected language.')
         code['language'] = source['language']
+
         choices = question.get('choices')
         if not isinstance(choices, list) or len(choices) != 4:
             raise PracticeError('Every question needs four choices.')
+
         choiceIds = set()
         choiceTexts = set()
         for choice in choices:
-            if not isinstance(choice, dict) or not isinstance(choice.get('id'), str) or not choice['id'].strip() or not isinstance(choice.get('text'), str) or not choice['text'].strip():
+            if (
+                not isinstance(choice, dict)
+                or not isinstance(choice.get('id'), str)
+                or not choice['id'].strip()
+                or not isinstance(choice.get('text'), str)
+                or not choice['text'].strip()
+            ):
                 raise PracticeError('A choice is missing its ID or text.')
+
             choiceIds.add(choice['id'])
             choiceTexts.add(choice['text'].strip())
-        if len(choiceIds) != 4 or len(choiceTexts) != 4 or not isinstance(question.get('answer'), dict) or question['answer'].get('choiceId') not in choiceIds:
+
+        if (
+            len(choiceIds) != 4
+            or len(choiceTexts) != 4
+            or not isinstance(question.get('answer'), dict)
+            or question['answer'].get('choiceId') not in choiceIds
+        ):
             raise PracticeError('Choices must have unique IDs and one valid answer.')
+
         if not isinstance(question.get('explanation'), str) or not question['explanation'].strip():
             raise PracticeError('Every answer needs an explanation.')
         if question.get('difficulty') != settings['difficulty']:
             raise PracticeError('Question difficulty does not match the request.')
+
         category = question.get('category')
-        if (not isinstance(category, str) or not category.strip()
-                or len(category.strip()) > 40
-                or any(not (character.isalnum() or character in ' _-') for character in category.strip())):
+        if (
+            not isinstance(category, str)
+            or not category.strip()
+            or len(category.strip()) > 40
+            or any(not (character.isalnum() or character in ' _-') for character in category.strip())
+        ):
             raise PracticeError('Every question needs a brief category label.')
         question['category'] = category.strip().lower()
+
     return {
         'schemaVersion': 1,
         'title': (data.get('title') or source['title'] or f"{source['language']} code practice")[:120],
@@ -83,19 +115,42 @@ def connect():
     connection.row_factory = sqlite3.Row
     try:
         with connection:
-            connection.execute('''CREATE TABLE IF NOT EXISTS practiceSets (
-                id TEXT PRIMARY KEY, ownerId TEXT NOT NULL, data TEXT NOT NULL,
-                attempts TEXT NOT NULL, createdAt INTEGER NOT NULL)''')
-            connection.execute('''CREATE TABLE IF NOT EXISTS users (
-                id TEXT PRIMARY KEY, googleSub TEXT UNIQUE NOT NULL,
-                email TEXT NOT NULL, name TEXT NOT NULL, createdAt INTEGER NOT NULL)''')
-            connection.execute('''CREATE TABLE IF NOT EXISTS generationUsage (
-                userId TEXT NOT NULL, day TEXT NOT NULL, count INTEGER NOT NULL,
-                PRIMARY KEY (userId, day))''')
-            connection.execute('''CREATE TABLE IF NOT EXISTS questionMistakes (
-                userId TEXT NOT NULL, questionType TEXT NOT NULL, category TEXT NOT NULL,
-                count INTEGER NOT NULL DEFAULT 0, updatedAt INTEGER NOT NULL,
-                PRIMARY KEY (userId, questionType, category))''')
+            connection.execute('''
+                CREATE TABLE IF NOT EXISTS practiceSets (
+                    id TEXT PRIMARY KEY,
+                    ownerId TEXT NOT NULL,
+                    data TEXT NOT NULL,
+                    attempts TEXT NOT NULL,
+                    createdAt INTEGER NOT NULL
+                )
+            ''')
+            connection.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id TEXT PRIMARY KEY,
+                    googleSub TEXT UNIQUE NOT NULL,
+                    email TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    createdAt INTEGER NOT NULL
+                )
+            ''')
+            connection.execute('''
+                CREATE TABLE IF NOT EXISTS generationUsage (
+                    userId TEXT NOT NULL,
+                    day TEXT NOT NULL,
+                    count INTEGER NOT NULL,
+                    PRIMARY KEY (userId, day)
+                )
+            ''')
+            connection.execute('''
+                CREATE TABLE IF NOT EXISTS questionMistakes (
+                    userId TEXT NOT NULL,
+                    questionType TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    count INTEGER NOT NULL DEFAULT 0,
+                    updatedAt INTEGER NOT NULL,
+                    PRIMARY KEY (userId, questionType, category)
+                )
+            ''')
             yield connection
     finally:
         connection.close()
@@ -104,24 +159,34 @@ def connect():
 def createSet(ownerId, practiceSet):
     setId = uuid.uuid4().hex
     with connect() as connection:
-        connection.execute('INSERT INTO practiceSets VALUES (?, ?, ?, ?, ?)',
-                           (setId, ownerId, json.dumps(practiceSet), '{}', int(time.time())))
+        connection.execute(
+            'INSERT INTO practiceSets VALUES (?, ?, ?, ?, ?)',
+            (setId, ownerId, json.dumps(practiceSet), '{}', int(time.time())),
+        )
     return setId
 
 
 def getSet(ownerId, setId):
     with connect() as connection:
-        row = connection.execute('SELECT data, attempts FROM practiceSets WHERE id = ? AND ownerId = ?',
-                                 (setId, ownerId)).fetchone()
+        row = connection.execute(
+            'SELECT data, attempts FROM practiceSets WHERE id = ? AND ownerId = ?',
+            (setId, ownerId),
+        ).fetchone()
+
     if row is None:
         raise PracticeError('Practice set not found.')
+
     return json.loads(row['data']), json.loads(row['attempts'])
 
 
 def safeQuestion(question):
-    safe = {key: question[key] for key in ('id', 'type', 'prompt', 'code', 'choices', 'difficulty')}
+    safe = {
+        key: question[key]
+        for key in ('id', 'type', 'prompt', 'code', 'choices', 'difficulty')
+    }
     if 'category' in question:
         safe['category'] = question['category']
+
     return safe
 
 
@@ -129,60 +194,98 @@ def recordAnswer(userId, ownerId, setId, questionId, choiceId, questionType, cat
     # A write lock makes duplicate submissions return the original feedback.
     with connect() as connection:
         connection.execute('BEGIN IMMEDIATE')
-        row = connection.execute('SELECT data, attempts FROM practiceSets WHERE id = ? AND ownerId = ?',
-                                 (setId, ownerId)).fetchone()
+        row = connection.execute(
+            'SELECT data, attempts FROM practiceSets WHERE id = ? AND ownerId = ?',
+            (setId, ownerId),
+        ).fetchone()
         if row is None:
             raise PracticeError('Practice set not found.')
+
         practiceSet, attempts = json.loads(row['data']), json.loads(row['attempts'])
-        questionIndex = next((index for index, item in enumerate(practiceSet['questions']) if item['id'] == questionId), None)
+        questionIndex = next(
+            (index for index, item in enumerate(practiceSet['questions']) if item['id'] == questionId),
+            None,
+        )
         if questionIndex is None:
             raise PracticeError('Question not found.')
+
         question = practiceSet['questions'][questionIndex]
         storedCategory = question.get('category') or 'uncategorized'
         if questionType != question['type'] or category != storedCategory:
             raise PracticeError('Question type or category does not match the current question.')
+
         if questionId in attempts:
             return feedback(question, attempts[questionId], len(practiceSet['questions']), questionIndex)
         if questionIndex != len(attempts):
             raise PracticeError('Answer the current question first.')
         if choiceId not in {choice['id'] for choice in question['choices']}:
             raise PracticeError('Choose one of the available answers.')
+
         attempts[questionId] = choiceId
-        connection.execute('UPDATE practiceSets SET attempts = ? WHERE id = ?', (json.dumps(attempts), setId))
+        connection.execute(
+            'UPDATE practiceSets SET attempts = ? WHERE id = ?',
+            (json.dumps(attempts), setId),
+        )
+
         if choiceId != question['answer']['choiceId']:
-            connection.execute('''INSERT INTO questionMistakes
-                (userId, questionType, category, count, updatedAt) VALUES (?, ?, ?, 1, ?)
-                ON CONFLICT(userId, questionType, category) DO UPDATE SET
-                count = count + 1, updatedAt = excluded.updatedAt''',
-                (userId, question['type'], storedCategory, int(time.time())))
+            connection.execute(
+                '''
+                    INSERT INTO questionMistakes
+                        (userId, questionType, category, count, updatedAt)
+                    VALUES (?, ?, ?, 1, ?)
+                    ON CONFLICT(userId, questionType, category) DO UPDATE SET
+                        count = count + 1,
+                        updatedAt = excluded.updatedAt
+                ''',
+                (userId, question['type'], storedCategory, int(time.time())),
+            )
+
     return feedback(question, choiceId, len(practiceSet['questions']), questionIndex)
 
 
 def listQuestionMistakes(userId):
     with connect() as connection:
-        rows = connection.execute('''SELECT questionType, category, count, updatedAt
-            FROM questionMistakes WHERE userId = ? ORDER BY count DESC, category''', (userId,)).fetchall()
+        rows = connection.execute(
+            '''
+                SELECT questionType, category, count, updatedAt
+                FROM questionMistakes
+                WHERE userId = ?
+                ORDER BY count DESC, category
+            ''',
+            (userId,),
+        ).fetchall()
+
     return [dict(row) for row in rows]
 
 
 def feedback(question, choiceId, total, index):
-    return {'questionId': question['id'], 'selectedChoiceId': choiceId,
-            'correct': choiceId == question['answer']['choiceId'],
-            'correctChoiceId': question['answer']['choiceId'],
-            'explanation': question['explanation'], 'completed': index + 1 == total}
+    return {
+        'questionId': question['id'],
+        'selectedChoiceId': choiceId,
+        'correct': choiceId == question['answer']['choiceId'],
+        'correctChoiceId': question['answer']['choiceId'],
+        'explanation': question['explanation'],
+        'completed': index + 1 == total,
+    }
 
 
 def progress(practiceSet, attempts):
     questions = practiceSet['questions']
     completed = len(attempts) == len(questions)
-    score = sum(attempts.get(item['id']) == item['answer']['choiceId'] for item in questions if item['id'] in attempts)
+    score = sum(
+        attempts.get(item['id']) == item['answer']['choiceId']
+        for item in questions
+        if item['id'] in attempts
+    )
     return {'answered': len(attempts), 'total': len(questions), 'score': score, 'completed': completed}
 
 
 def resetSet(ownerId, setId):
     with connect() as connection:
-        cursor = connection.execute('UPDATE practiceSets SET attempts = ? WHERE id = ? AND ownerId = ?',
-                                    ('{}', setId, ownerId))
+        cursor = connection.execute(
+            'UPDATE practiceSets SET attempts = ? WHERE id = ? AND ownerId = ?',
+            ('{}', setId, ownerId),
+        )
         if cursor.rowcount == 0:
             raise PracticeError('Practice set not found.')
 
@@ -191,41 +294,81 @@ def upsertUser(googleSub, email, name):
     with connect() as connection:
         row = connection.execute('SELECT id FROM users WHERE googleSub = ?', (googleSub,)).fetchone()
         userId = row['id'] if row else uuid.uuid4().hex
-        connection.execute('''INSERT INTO users (id, googleSub, email, name, createdAt)
-            VALUES (?, ?, ?, ?, ?) ON CONFLICT(googleSub) DO UPDATE SET
-            email = excluded.email, name = excluded.name''',
-            (userId, googleSub, email, name, int(time.time())))
+        connection.execute(
+            '''
+                INSERT INTO users (id, googleSub, email, name, createdAt)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(googleSub) DO UPDATE SET
+                    email = excluded.email,
+                    name = excluded.name
+            ''',
+            (userId, googleSub, email, name, int(time.time())),
+        )
+
     return userId
 
 
 def getUser(userId):
     with connect() as connection:
         row = connection.execute('SELECT id, email, name FROM users WHERE id = ?', (userId,)).fetchone()
+
     return dict(row) if row else None
 
 
 def listSets(ownerId):
     with connect() as connection:
-        rows = connection.execute('SELECT id, data, attempts, createdAt FROM practiceSets WHERE ownerId = ? ORDER BY createdAt DESC LIMIT 50',
-                                  (ownerId,)).fetchall()
-    return [{'id': row['id'], 'title': json.loads(row['data'])['title'],
-             'language': json.loads(row['data'])['source']['language'],
-             'progress': progress(json.loads(row['data']), json.loads(row['attempts'])),
-             'createdAt': row['createdAt']} for row in rows]
+        rows = connection.execute(
+            '''
+                SELECT id, data, attempts, createdAt
+                FROM practiceSets
+                WHERE ownerId = ?
+                ORDER BY createdAt DESC
+                LIMIT 50
+            ''',
+            (ownerId,),
+        ).fetchall()
+
+    sets = []
+    for row in rows:
+        practiceSet = json.loads(row['data'])
+        attempts = json.loads(row['attempts'])
+        sets.append({
+            'id': row['id'],
+            'title': practiceSet['title'],
+            'language': practiceSet['source']['language'],
+            'progress': progress(practiceSet, attempts),
+            'createdAt': row['createdAt'],
+        })
+
+    return sets
 
 
 def reserveGeneration(userId, dailyLimit):
     day = datetime.now(timezone.utc).date().isoformat()
     with connect() as connection:
         connection.execute('BEGIN IMMEDIATE')
-        row = connection.execute('SELECT count FROM generationUsage WHERE userId = ? AND day = ?', (userId, day)).fetchone()
+        row = connection.execute(
+            'SELECT count FROM generationUsage WHERE userId = ? AND day = ?',
+            (userId, day),
+        ).fetchone()
         if row and row['count'] >= dailyLimit:
             raise PracticeError(f'Daily generation limit reached ({dailyLimit}). Try again tomorrow.')
-        connection.execute('''INSERT INTO generationUsage (userId, day, count) VALUES (?, ?, 1)
-            ON CONFLICT(userId, day) DO UPDATE SET count = count + 1''', (userId, day))
+
+        connection.execute(
+            '''
+                INSERT INTO generationUsage (userId, day, count)
+                VALUES (?, ?, 1)
+                ON CONFLICT(userId, day) DO UPDATE SET count = count + 1
+            ''',
+            (userId, day),
+        )
+
     return day
 
 
 def refundGeneration(userId, day):
     with connect() as connection:
-        connection.execute('UPDATE generationUsage SET count = MAX(0, count - 1) WHERE userId = ? AND day = ?', (userId, day))
+        connection.execute(
+            'UPDATE generationUsage SET count = MAX(0, count - 1) WHERE userId = ? AND day = ?',
+            (userId, day),
+        )

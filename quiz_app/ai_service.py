@@ -3,9 +3,12 @@
 The model sees only bounded study material. Validation is performed by practice.py;
 this module retries one malformed response and returns user-safe provider errors.
 """
+
 import json
 import os
+
 import requests
+
 from quiz_app.practice import PracticeError, validateSet
 
 
@@ -32,6 +35,7 @@ def generateSet(source, settings):
     apiKey = os.environ.get('OPENROUTER_API_KEY')
     if not apiKey:
         raise AIServiceError('The server has no OpenRouter API key. Set OPENROUTER_API_KEY and restart it.')
+
     prompt = json.dumps({'source': source, 'settings': settings})
     for attempt in range(2):
         try:
@@ -42,7 +46,13 @@ def generateSet(source, settings):
                     'model': os.environ.get('OPENROUTER_MODEL', 'google/gemini-2.5-flash'),
                     'messages': [
                         {'role': 'system', 'content': SYSTEM_INSTRUCTION},
-                        {'role': 'user', 'content': prompt + ('\nPrevious output was invalid. Repair the JSON and follow every requirement.' if attempt else '')},
+                        {
+                            'role': 'user',
+                            'content': prompt + (
+                                '\nPrevious output was invalid. Repair the JSON and follow every requirement.'
+                                if attempt else ''
+                            ),
+                        },
                     ],
                     'response_format': {'type': 'json_object'},
                     'max_tokens': 6000,
@@ -56,12 +66,20 @@ def generateSet(source, settings):
             if response.status_code == 429:
                 raise AIServiceError('OpenRouter is temporarily rate limited. Try again later.')
             if response.status_code >= 400:
-                raise AIServiceError('OpenRouter rejected the generation request. Check the configured model and try again.')
+                raise AIServiceError(
+                    'OpenRouter rejected the generation request. '
+                    'Check the configured model and try again.'
+                )
+
             data = json.loads(response.json()['choices'][0]['message']['content'] or '')
             return validateSet(data, source, settings)
         except (ValueError, KeyError, IndexError, TypeError, PracticeError):
             if attempt:
-                raise AIServiceError('Generated questions were invalid twice. Please revise your source and try again.') from None
+                raise AIServiceError(
+                    'Generated questions were invalid twice. '
+                    'Please revise your source and try again.'
+                ) from None
         except requests.RequestException:
             raise AIServiceError('OpenRouter is unavailable. Try again later.') from None
+
     raise AIServiceError('Could not generate questions.')
