@@ -10,10 +10,10 @@ Requires Python 3.10+ and Node.js 20+.
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
+cp -n .env.example .env
 ```
 
-Set `SECRET_KEY`, `OPENROUTER_API_KEY`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET` in `.env`. Create the OpenRouter key at [OpenRouter Keys](https://openrouter.ai/settings/keys). Register `http://localhost:5173/api/auth/google/callback` as an authorized redirect URI for your Google OAuth web application. Then run:
+For Google sign-in and AI generation, set `SECRET_KEY`, `OPENROUTER_API_KEY`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET` in `.env`. Create the OpenRouter key at [OpenRouter Keys](https://openrouter.ai/settings/keys). Register `http://localhost:5173/api/auth/google/callback` as an authorized redirect URI for your Google OAuth web application. The preset demo below needs none of these credentials. Then run:
 
 ```sh
 set -a
@@ -32,7 +32,11 @@ npm run dev
 
 Open `http://localhost:5173`. The development server forwards `/api` to Flask at `127.0.0.1:5001`.
 
-To inspect the interface without Google credentials or OpenRouter charges, set `LOCAL_DEMO_MODE=true` **only for local development**. The practice page offers a local demo account and a hand-authored Python sample set. This mode is restricted to loopback requests and does not send the sample to OpenRouter.
+## Try the `demo` branch locally
+
+This branch enables `LOCAL_DEMO_MODE=true` in `.env.example`. Copy it to `.env` if you have not made one yet, then start Flask and Vite with the commands above. If you already have a `.env`, set `LOCAL_DEMO_MODE=true`, `FRONTEND_ORIGIN=http://localhost:5173`, and `COOKIE_SECURE=false` in it. Open `http://localhost:5173/practice`, choose **Use local demo account**, then **Try 10 sample cards (easy to hard)**. The preset has three easy, four medium, and three hard Python cards. It needs no Google or OpenRouter credentials and makes no model request.
+
+Demo routes accept only loopback requests and are unavailable when demo mode is disabled. Set `LOCAL_DEMO_MODE=false` for deployment.
 
 ## Configuration
 
@@ -64,7 +68,7 @@ The input page accepts up to **5,000 characters**, a language name up to 60 char
 - `GET /api/practice-sets/<id>/results`: completed results.
 - `POST /api/practice-sets/<id>/retry`: clear attempts and retry.
 
-With `LOCAL_DEMO_MODE=true`, `POST /api/auth/demo` signs into the local demo account and `POST /api/practice-sets/sample` saves a hand-authored three-card set. These routes are unavailable outside local demo mode.
+With `LOCAL_DEMO_MODE=true`, `POST /api/auth/demo` signs into the local demo account and `POST /api/practice-sets/sample` saves the hand-authored ten-card set. These routes are unavailable outside local demo mode.
 
 ## UI
 

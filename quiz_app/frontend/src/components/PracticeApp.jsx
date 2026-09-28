@@ -209,7 +209,7 @@ export default function PracticeApp({ theme, onToggleTheme }) {
                 <div><label htmlFor="count">Questions</label><select id="count" value={questionCount} onChange={(event) => setQuestionCount(Number(event.target.value))}><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
               </div>
               <button className="button button-primary" type="submit" disabled={phase === 'generating'}>{phase === 'generating' ? 'Generating questions…' : 'Generate questions'}</button>
-              {demoMode && <button className="button button-outline" type="button" disabled={phase === 'generating'} onClick={useSample}>Try sample cards without AI</button>}
+              {demoMode && <button className="button button-outline" type="button" disabled={phase === 'generating'} onClick={useSample}>Try 10 sample cards (easy to hard)</button>}
             </form>
             {savedSets.length > 0 && <div className="saved-sets"><h2>Your saved sets</h2><ul>{savedSets.map((item) => <li key={item.id}>
               <button type="button" onClick={() => { setSetId(item.id); setPhase('loading'); }}><strong>{item.title}</strong><span>{item.language} · {item.progress.answered}/{item.progress.total} answered</span></button>
@@ -220,6 +220,7 @@ export default function PracticeApp({ theme, onToggleTheme }) {
           <section className="practice-panel" aria-labelledby="question-heading">
             <div className="question-top"><p className="eyebrow">{title}</p><p className="progress-label">Question {feedback ? progress.answered : progress.answered + 1} of {progress.total}</p></div>
             <div className="progress-track" role="progressbar" aria-label="Questions answered" aria-valuenow={progress.answered} aria-valuemin="0" aria-valuemax={progress.total}><span style={{ width: `${100 * progress.answered / progress.total}%` }} /></div>
+            <p className={`difficulty-label difficulty-${question.difficulty}`}>{question.difficulty} difficulty</p>
             <h1 id="question-heading">{question.prompt}</h1>
             <pre className="code-block"><code>{question.code.text}</code></pre>
             {error && <p className="error-message" role="alert">{error}</p>}

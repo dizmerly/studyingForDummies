@@ -166,6 +166,9 @@ button:disabled { cursor: not-allowed !important; opacity: 0.55; transform: none
 .progress-label { flex-shrink: 0; color: var(--muted); font-size: 13px; }
 .progress-track { height: 8px; margin: 0 0 32px; background: #e5eee6; border-radius: 99px; overflow: hidden; }
 .progress-track span { display: block; height: 100%; background: var(--green); transition: width 200ms; }
+.difficulty-label { display: inline-block; margin: 0 0 13px; padding: 5px 10px; color: #275c32; background: #e4f4e7; border-radius: 99px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
+.difficulty-medium { color: #76521b; background: #fff1d6; }
+.difficulty-hard { color: #8b3831; background: #ffe8e3; }
 .code-block { overflow-x: auto; padding: 20px; color: #ecf6ec; background: #18251b; border-radius: 10px; white-space: pre; }
 .practice-panel fieldset { padding: 0; margin: 28px 0 22px; border: 0; }
 .choice-list { display: grid; gap: 10px; margin-top: 12px; }
@@ -221,6 +224,9 @@ button:disabled { cursor: not-allowed !important; opacity: 0.55; transform: none
 :root[data-theme='dark'] .button-outline { color: var(--ink); background: var(--surface); border-color: var(--border) !important; }
 :root[data-theme='dark'] .text-button { color: var(--green-dark); }
 :root[data-theme='dark'] .progress-track { background: #304735; }
+:root[data-theme='dark'] .difficulty-easy { color: #a9e7b2; background: #254b2d; }
+:root[data-theme='dark'] .difficulty-medium { color: #f4dba7; background: #574321; }
+:root[data-theme='dark'] .difficulty-hard { color: #ffc6be; background: #63342e; }
 :root[data-theme='dark'] .choice { border-color: var(--border); }
 :root[data-theme='dark'] .choice.selected, :root[data-theme='dark'] .feedback.correct { background: #20462a; border-color: var(--green); }
 :root[data-theme='dark'] .feedback.incorrect { color: #f7dfb8; background: #4a3620; }
