@@ -271,7 +271,11 @@ export default function PracticeApp({ theme, onToggleTheme }) {
             {error && <p className="error-message" role="alert">{error}</p>}
             <a className="button button-primary" href="/api/auth/google">Continue with Google</a>
             {demoMode && (
-              <button className="button button-outline demo-button" type="button" onClick={signInDemo}>
+              <button
+                className="button button-outline demo-button"
+                type="button"
+                onClick={signInDemo}
+              >
                 Use local demo account
               </button>
             )}
@@ -310,10 +314,14 @@ export default function PracticeApp({ theme, onToggleTheme }) {
                 rows="11"
                 value={sourceText}
                 onChange={(event) => setSourceText(event.target.value)}
-                placeholder={'const values = [1, 2, 3];\nfor (const value of values) console.log(value * 2);'}
+                placeholder={
+                  'const values = [1, 2, 3];\n'
+                  + 'for (const value of values) console.log(value * 2);'
+                }
               />
               <p className="field-hint">
-                {sourceText.length.toLocaleString()} / 5,000 characters. Avoid pasting private information.
+                {sourceText.length.toLocaleString()} / 5,000 characters.
+                Avoid pasting private information.
               </p>
 
               <div className="form-row">
@@ -330,7 +338,11 @@ export default function PracticeApp({ theme, onToggleTheme }) {
                 </div>
                 <div>
                   <label htmlFor="difficulty">Difficulty</label>
-                  <select id="difficulty" value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
+                  <select
+                    id="difficulty"
+                    value={difficulty}
+                    onChange={(event) => setDifficulty(event.target.value)}
+                  >
                     <option value="easy">Easy</option>
                     <option value="medium">Medium</option>
                     <option value="hard">Hard</option>
@@ -338,7 +350,11 @@ export default function PracticeApp({ theme, onToggleTheme }) {
                 </div>
                 <div>
                   <label htmlFor="count">Questions</label>
-                  <select id="count" value={questionCount} onChange={(event) => setQuestionCount(Number(event.target.value))}>
+                  <select
+                    id="count"
+                    value={questionCount}
+                    onChange={(event) => setQuestionCount(Number(event.target.value))}
+                  >
                     <option value="3">3</option>
                     <option value="4">4</option>
                     <option value="5">5</option>
@@ -346,7 +362,11 @@ export default function PracticeApp({ theme, onToggleTheme }) {
                 </div>
               </div>
 
-              <button className="button button-primary" type="submit" disabled={phase === 'generating'}>
+              <button
+                className="button button-primary"
+                type="submit"
+                disabled={phase === 'generating'}
+              >
                 {phase === 'generating' ? 'Generating questions…' : 'Generate questions'}
               </button>
             </form>
@@ -391,7 +411,8 @@ export default function PracticeApp({ theme, onToggleTheme }) {
               <div className="question-top">
                 <p className="eyebrow">{title}</p>
                 <p className="progress-label">
-                  Question {feedback ? progress.answered : progress.answered + 1} of {progress.total}
+                  Question {feedback ? progress.answered : progress.answered + 1}
+                  {' '}of {progress.total}
                 </p>
               </div>
               <div
@@ -448,11 +469,17 @@ export default function PracticeApp({ theme, onToggleTheme }) {
               </form>
 
               {feedback && (
-                <div className={`feedback ${feedback.correct ? 'correct' : 'incorrect'}`} role="status">
+                <div
+                  className={`feedback ${feedback.correct ? 'correct' : 'incorrect'}`}
+                  role="status"
+                >
                   <h2>{feedback.correct ? 'That’s right.' : 'Not quite.'}</h2>
                   {!feedback.correct && (
                     <p>
-                      Correct answer: {question.choices.find((choice) => choice.id === feedback.correctChoiceId)?.text}
+                      Correct answer: {' '}
+                      {question.choices.find(
+                        (choice) => choice.id === feedback.correctChoiceId,
+                      )?.text}
                     </p>
                   )}
                   <p>{feedback.explanation}</p>

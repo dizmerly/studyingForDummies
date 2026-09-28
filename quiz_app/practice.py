@@ -94,14 +94,19 @@ def validateSet(data, source, settings):
             not isinstance(category, str)
             or not category.strip()
             or len(category.strip()) > 40
-            or any(not (character.isalnum() or character in ' _-') for character in category.strip())
+            or any(
+                not (character.isalnum() or character in ' _-')
+                for character in category.strip()
+            )
         ):
             raise PracticeError('Every question needs a brief category label.')
         question['category'] = category.strip().lower()
 
     return {
         'schemaVersion': 1,
-        'title': (data.get('title') or source['title'] or f"{source['language']} code practice")[:120],
+        'title': (
+            data.get('title') or source['title'] or f"{source['language']} code practice"
+        )[:120],
         'source': {'title': source['title'], 'language': source['language']},
         'settings': settings,
         'questions': questions,
@@ -203,7 +208,10 @@ def recordAnswer(userId, ownerId, setId, questionId, choiceId, questionType, cat
 
         practiceSet, attempts = json.loads(row['data']), json.loads(row['attempts'])
         questionIndex = next(
-            (index for index, item in enumerate(practiceSet['questions']) if item['id'] == questionId),
+            (
+                index for index, item in enumerate(practiceSet['questions'])
+                if item['id'] == questionId
+            ),
             None,
         )
         if questionIndex is None:
@@ -215,7 +223,12 @@ def recordAnswer(userId, ownerId, setId, questionId, choiceId, questionType, cat
             raise PracticeError('Question type or category does not match the current question.')
 
         if questionId in attempts:
-            return feedback(question, attempts[questionId], len(practiceSet['questions']), questionIndex)
+            return feedback(
+                question,
+                attempts[questionId],
+                len(practiceSet['questions']),
+                questionIndex,
+            )
         if questionIndex != len(attempts):
             raise PracticeError('Answer the current question first.')
         if choiceId not in {choice['id'] for choice in question['choices']}:
@@ -277,7 +290,12 @@ def progress(practiceSet, attempts):
         for item in questions
         if item['id'] in attempts
     )
-    return {'answered': len(attempts), 'total': len(questions), 'score': score, 'completed': completed}
+    return {
+        'answered': len(attempts),
+        'total': len(questions),
+        'score': score,
+        'completed': completed,
+    }
 
 
 def resetSet(ownerId, setId):
@@ -292,7 +310,10 @@ def resetSet(ownerId, setId):
 
 def upsertUser(googleSub, email, name):
     with connect() as connection:
-        row = connection.execute('SELECT id FROM users WHERE googleSub = ?', (googleSub,)).fetchone()
+        row = connection.execute(
+            'SELECT id FROM users WHERE googleSub = ?',
+            (googleSub,),
+        ).fetchone()
         userId = row['id'] if row else uuid.uuid4().hex
         connection.execute(
             '''
@@ -310,7 +331,10 @@ def upsertUser(googleSub, email, name):
 
 def getUser(userId):
     with connect() as connection:
-        row = connection.execute('SELECT id, email, name FROM users WHERE id = ?', (userId,)).fetchone()
+        row = connection.execute(
+            'SELECT id, email, name FROM users WHERE id = ?',
+            (userId,),
+        ).fetchone()
 
     return dict(row) if row else None
 
@@ -352,7 +376,9 @@ def reserveGeneration(userId, dailyLimit):
             (userId, day),
         ).fetchone()
         if row and row['count'] >= dailyLimit:
-            raise PracticeError(f'Daily generation limit reached ({dailyLimit}). Try again tomorrow.')
+            raise PracticeError(
+                f'Daily generation limit reached ({dailyLimit}). Try again tomorrow.'
+            )
 
         connection.execute(
             '''

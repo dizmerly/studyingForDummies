@@ -34,7 +34,10 @@ Do not invent unrelated code or material. Return exactly the requested number of
 def generateSet(source, settings):
     apiKey = os.environ.get('OPENROUTER_API_KEY')
     if not apiKey:
-        raise AIServiceError('The server has no OpenRouter API key. Set OPENROUTER_API_KEY and restart it.')
+        raise AIServiceError(
+            'The server has no OpenRouter API key. '
+            'Set OPENROUTER_API_KEY and restart it.'
+        )
 
     prompt = json.dumps({'source': source, 'settings': settings})
     for attempt in range(2):
@@ -49,7 +52,8 @@ def generateSet(source, settings):
                         {
                             'role': 'user',
                             'content': prompt + (
-                                '\nPrevious output was invalid. Repair the JSON and follow every requirement.'
+                                '\nPrevious output was invalid. '
+                                'Repair the JSON and follow every requirement.'
                                 if attempt else ''
                             ),
                         },
@@ -62,7 +66,9 @@ def generateSet(source, settings):
             if response.status_code == 401:
                 raise AIServiceError('The server OpenRouter API key was rejected.')
             if response.status_code == 402:
-                raise AIServiceError('OpenRouter has insufficient credits. Add credits and try again.')
+                raise AIServiceError(
+                    'OpenRouter has insufficient credits. Add credits and try again.'
+                )
             if response.status_code == 429:
                 raise AIServiceError('OpenRouter is temporarily rate limited. Try again later.')
             if response.status_code >= 400:

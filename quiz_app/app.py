@@ -95,7 +95,10 @@ def authMe():
 def googleLogin():
     if not os.environ.get('GOOGLE_CLIENT_ID') or not os.environ.get('GOOGLE_CLIENT_SECRET'):
         return error('Google sign-in is not configured on this server.', 503)
-    callback = os.environ.get('GOOGLE_REDIRECT_URI') or request.url_root.rstrip('/') + '/api/auth/google/callback'
+    callback = (
+        os.environ.get('GOOGLE_REDIRECT_URI')
+        or request.url_root.rstrip('/') + '/api/auth/google/callback'
+    )
     return oauth.google.authorize_redirect(callback)
 
 
@@ -104,10 +107,18 @@ def googleCallback():
     try:
         token = oauth.google.authorize_access_token()
         identity = token.get('userinfo') or oauth.google.parse_id_token(token)
-        if not identity.get('sub') or not identity.get('email') or not identity.get('email_verified'):
+        if (
+            not identity.get('sub')
+            or not identity.get('email')
+            or not identity.get('email_verified')
+        ):
             return error('Google did not provide a verified email.', 403)
         email = identity['email'].lower()
-        allowed = {item.strip().lower() for item in os.environ.get('ALLOWED_EMAILS', '').split(',') if item.strip()}
+        allowed = {
+            item.strip().lower()
+            for item in os.environ.get('ALLOWED_EMAILS', '').split(',')
+            if item.strip()
+        }
         if allowed and email not in allowed:
             return error('This Google account is not allowed to use this app.', 403)
         userId = upsertUser(identity['sub'], email, identity.get('name') or email)

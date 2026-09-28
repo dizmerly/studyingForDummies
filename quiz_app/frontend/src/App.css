@@ -1247,13 +1247,16 @@ button:disabled {
   box-shadow: none;
 }
 
-:root[data-theme='dark'] .source-form input, :root[data-theme='dark'] .source-form textarea, :root[data-theme='dark'] .source-form select {
+:root[data-theme='dark'] .source-form input,
+:root[data-theme='dark'] .source-form textarea,
+:root[data-theme='dark'] .source-form select {
   color: var(--ink);
   background: #152018;
   border-color: var(--border);
 }
 
-:root[data-theme='dark'] .source-form input::placeholder, :root[data-theme='dark'] .source-form textarea::placeholder {
+:root[data-theme='dark'] .source-form input::placeholder,
+:root[data-theme='dark'] .source-form textarea::placeholder {
   color: #9bad9e;
   opacity: 1;
 }
