@@ -59,7 +59,8 @@ def validateSet(data, source, settings):
             raise PracticeError('Choices must have unique IDs and one valid answer.')
         if not isinstance(question.get('explanation'), str) or not question['explanation'].strip():
             raise PracticeError('Every answer needs an explanation.')
-        if question.get('difficulty') != settings['difficulty']:
+        if (question.get('difficulty') not in ('easy', 'medium', 'hard')
+                or (settings['difficulty'] != 'mixed' and question['difficulty'] != settings['difficulty'])):
             raise PracticeError('Question difficulty does not match the request.')
     return {
         'schemaVersion': 1,
