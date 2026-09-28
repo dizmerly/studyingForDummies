@@ -61,6 +61,12 @@ def validateSet(data, source, settings):
             raise PracticeError('Every answer needs an explanation.')
         if question.get('difficulty') != settings['difficulty']:
             raise PracticeError('Question difficulty does not match the request.')
+        category = question.get('category')
+        if (not isinstance(category, str) or not category.strip()
+                or len(category.strip()) > 40
+                or any(not (character.isalnum() or character in ' _-') for character in category.strip())):
+            raise PracticeError('Every question needs a brief category label.')
+        question['category'] = category.strip().lower()
     return {
         'schemaVersion': 1,
         'title': (data.get('title') or source['title'] or f"{source['language']} code practice")[:120],
@@ -86,6 +92,10 @@ def connect():
             connection.execute('''CREATE TABLE IF NOT EXISTS generationUsage (
                 userId TEXT NOT NULL, day TEXT NOT NULL, count INTEGER NOT NULL,
                 PRIMARY KEY (userId, day))''')
+            connection.execute('''CREATE TABLE IF NOT EXISTS questionMistakes (
+                userId TEXT NOT NULL, questionType TEXT NOT NULL, category TEXT NOT NULL,
+                count INTEGER NOT NULL DEFAULT 0, updatedAt INTEGER NOT NULL,
+                PRIMARY KEY (userId, questionType, category))''')
             yield connection
     finally:
         connection.close()
@@ -109,10 +119,13 @@ def getSet(ownerId, setId):
 
 
 def safeQuestion(question):
-    return {key: question[key] for key in ('id', 'type', 'prompt', 'code', 'choices', 'difficulty')}
+    safe = {key: question[key] for key in ('id', 'type', 'prompt', 'code', 'choices', 'difficulty')}
+    if 'category' in question:
+        safe['category'] = question['category']
+    return safe
 
 
-def recordAnswer(ownerId, setId, questionId, choiceId):
+def recordAnswer(userId, ownerId, setId, questionId, choiceId, questionType, category):
     # A write lock makes duplicate submissions return the original feedback.
     with connect() as connection:
         connection.execute('BEGIN IMMEDIATE')
@@ -125,6 +138,9 @@ def recordAnswer(ownerId, setId, questionId, choiceId):
         if questionIndex is None:
             raise PracticeError('Question not found.')
         question = practiceSet['questions'][questionIndex]
+        storedCategory = question.get('category') or 'uncategorized'
+        if questionType != question['type'] or category != storedCategory:
+            raise PracticeError('Question type or category does not match the current question.')
         if questionId in attempts:
             return feedback(question, attempts[questionId], len(practiceSet['questions']), questionIndex)
         if questionIndex != len(attempts):
@@ -133,7 +149,20 @@ def recordAnswer(ownerId, setId, questionId, choiceId):
             raise PracticeError('Choose one of the available answers.')
         attempts[questionId] = choiceId
         connection.execute('UPDATE practiceSets SET attempts = ? WHERE id = ?', (json.dumps(attempts), setId))
+        if choiceId != question['answer']['choiceId']:
+            connection.execute('''INSERT INTO questionMistakes
+                (userId, questionType, category, count, updatedAt) VALUES (?, ?, ?, 1, ?)
+                ON CONFLICT(userId, questionType, category) DO UPDATE SET
+                count = count + 1, updatedAt = excluded.updatedAt''',
+                (userId, question['type'], storedCategory, int(time.time())))
     return feedback(question, choiceId, len(practiceSet['questions']), questionIndex)
+
+
+def listQuestionMistakes(userId):
+    with connect() as connection:
+        rows = connection.execute('''SELECT questionType, category, count, updatedAt
+            FROM questionMistakes WHERE userId = ? ORDER BY count DESC, category''', (userId,)).fetchall()
+    return [dict(row) for row in rows]
 
 
 def feedback(question, choiceId, total, index):

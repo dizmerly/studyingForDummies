@@ -17,11 +17,15 @@ SYSTEM_INSTRUCTION = '''Create code-reading practice grounded only in the suppli
 Return one JSON object with schemaVersion 1, title, and questions. Each question has:
 id, type (code_output or code_tracing), prompt, code {language: the source language, text},
 choices (exactly four objects with unique id and text), answer {choiceId},
-explanation (concise step-by-step reasoning), difficulty (requested difficulty).
+explanation (concise step-by-step reasoning), difficulty (requested difficulty),
+and category (a brief, lowercase topic label describing the concept being tested, such as
+"loops", "pointers", or "recursion"). Choose a category grounded in the supplied source
+and use a consistent label when multiple questions test the same concept. Do not use a
+sentence or include multiple categories.
 For hard questions, require careful tracing across multiple steps or subtle state changes,
 while keeping the answer unambiguous and grounded in the source.
-Use one unambiguous correct answer. Preserve code whitespace and the supplied language. Do not invent
-unrelated code or material. Return exactly the requested number of questions.'''
+Use one unambiguous correct answer. Preserve code whitespace and the supplied language.
+Do not invent unrelated code or material. Return exactly the requested number of questions.'''
 
 
 def generateSet(source, settings):

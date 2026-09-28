@@ -3,7 +3,8 @@
  * results. The server owns answers and progress. Local storage remembers only
  * the set ID so a refreshed page can resume the signed-in user's session.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { api } from '../services/api';
 import ThemeToggle from './ThemeToggle';
 
@@ -28,6 +29,45 @@ export default function PracticeApp({ theme, onToggleTheme }) {
   const [difficulty, setDifficulty] = useState('easy');
   const [questionCount, setQuestionCount] = useState(3);
   const [language, setLanguage] = useState('Python');
+  const [questionDirection, setQuestionDirection] = useState(1);
+  const advanceQuestionRef = useRef(() => {});
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (phase !== 'question' && phase !== 'submitting') return;
+      const target = event.target;
+      const typing = target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+      if (typing || event.altKey || event.ctrlKey || event.metaKey) return;
+
+      if (/^[1-4]$/.test(event.key) && !feedback && phase === 'question') {
+        const choice = question?.choices[Number(event.key) - 1];
+        if (choice) {
+          event.preventDefault();
+          setChoiceId(choice.id);
+        }
+      } else if (event.code === 'Space') {
+        if (feedback && !progress?.completed && phase === 'question') {
+          event.preventDefault();
+          advanceQuestionRef.current();
+        } else if (!feedback && choiceId && phase === 'question') {
+          event.preventDefault();
+          const form = document.querySelector('.question-form');
+          form?.requestSubmit();
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [phase, feedback, progress, question, choiceId]);
+
+  function advanceQuestion() {
+    if (!nextQuestion) return;
+    setQuestionDirection(1);
+    setQuestion(nextQuestion);
+    setFeedback(null);
+    setChoiceId('');
+  }
+  advanceQuestionRef.current = advanceQuestion;
 
   useEffect(() => {
     Promise.all([api.me(), api.config()]).then(([auth, config]) => {
@@ -126,7 +166,7 @@ export default function PracticeApp({ theme, onToggleTheme }) {
     setError('');
     setPhase('submitting');
     try {
-      const data = await api.answer(setId, question.id, choiceId);
+      const data = await api.answer(setId, question.id, choiceId, question.type, question.category || 'uncategorized');
       setFeedback(data.feedback);
       setNextQuestion(data.nextQuestion);
       setProgress(data.progress);
@@ -217,15 +257,16 @@ export default function PracticeApp({ theme, onToggleTheme }) {
           </section>
         )}
         {(phase === 'question' || phase === 'submitting') && question && (
-          <section className="practice-panel" aria-labelledby="question-heading">
+          <AnimatePresence mode="wait" initial={false} custom={questionDirection}>
+          <Motion.section key={question.id} custom={questionDirection} initial={{ opacity: 0, x: 36 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -36 }} transition={{ duration: 0.24, ease: 'easeInOut' }} className="practice-panel" aria-labelledby="question-heading">
             <div className="question-top"><p className="eyebrow">{title}</p><p className="progress-label">Question {feedback ? progress.answered : progress.answered + 1} of {progress.total}</p></div>
             <div className="progress-track" role="progressbar" aria-label="Questions answered" aria-valuenow={progress.answered} aria-valuemin="0" aria-valuemax={progress.total}><span style={{ width: `${100 * progress.answered / progress.total}%` }} /></div>
             <h1 id="question-heading">{question.prompt}</h1>
             <pre className="code-block"><code>{question.code.text}</code></pre>
             {error && <p className="error-message" role="alert">{error}</p>}
-            <form onSubmit={submitAnswer}>
+            <form className="question-form" onSubmit={submitAnswer}>
               <fieldset disabled={Boolean(feedback) || phase === 'submitting'}>
-                <legend>Choose one answer</legend>
+                <legend>Choose one answer <span className="keyboard-hint">Press 1–4 to select</span></legend>
                 <div className="choice-list">{question.choices.map((choice) => (
                   <label key={choice.id} className={`choice ${choiceId === choice.id ? 'selected' : ''}`}>
                     <input type="radio" name="choice" value={choice.id} checked={choiceId === choice.id} onChange={() => setChoiceId(choice.id)} />
@@ -233,15 +274,16 @@ export default function PracticeApp({ theme, onToggleTheme }) {
                   </label>
                 ))}</div>
               </fieldset>
-              {!feedback && <button className="button button-primary" type="submit" disabled={!choiceId || phase === 'submitting'}>{phase === 'submitting' ? 'Checking…' : 'Check answer'}</button>}
+              {!feedback && <button className="button button-primary" type="submit" disabled={!choiceId || phase === 'submitting'}>{phase === 'submitting' ? 'Checking…' : 'Check answer'}{choiceId && phase !== 'submitting' && <span className="space-hint">Space</span>}</button>}
             </form>
             {feedback && <div className={`feedback ${feedback.correct ? 'correct' : 'incorrect'}`} role="status">
               <h2>{feedback.correct ? 'That’s right.' : 'Not quite.'}</h2>
               {!feedback.correct && <p>Correct answer: {question.choices.find((choice) => choice.id === feedback.correctChoiceId)?.text}</p>}
               <p>{feedback.explanation}</p>
-              {progress.completed ? <button className="button button-primary" onClick={showResults}>See results</button> : <button className="button button-primary" onClick={() => { setQuestion(nextQuestion); setFeedback(null); setChoiceId(''); }}>Next question</button>}
+              {progress.completed ? <button className="button button-primary" onClick={showResults}>See results</button> : <button className="button button-primary" onClick={advanceQuestion}>Next question <span className="space-hint">Space</span></button>}
             </div>}
-          </section>
+          </Motion.section>
+          </AnimatePresence>
         )}
         {phase === 'results' && results && <section className="practice-panel" aria-labelledby="results-heading">
           <p className="eyebrow">Practice complete</p><h1 id="results-heading">{results.title}</h1>

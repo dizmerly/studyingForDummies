@@ -34,11 +34,12 @@ export const api = {
   getSet(setId) {
     return request(`/practice-sets/${setId}`);
   },
-  answer(setId, questionId, choiceId) {
+  answer(setId, questionId, choiceId, questionType, category) {
     return request(`/practice-sets/${setId}/answers`, {
-      method: 'POST', body: JSON.stringify({ questionId, choiceId }),
+      method: 'POST', body: JSON.stringify({ questionId, choiceId, questionType, category }),
     });
   },
+  questionMistakes() { return request('/question-mistakes'); },
   results(setId) {
     return request(`/practice-sets/${setId}/results`);
   },

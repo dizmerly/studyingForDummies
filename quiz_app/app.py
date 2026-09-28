@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request, send_from_directory, session, redirec
 from flask_cors import CORS
 from authlib.integrations.flask_client import OAuth
 from quiz_app.ai_service import AIServiceError, generateSet
-from quiz_app.practice import PracticeError, createSet, feedback, getSet, getUser, listSets, progress, recordAnswer, refundGeneration, reserveGeneration, resetSet, safeQuestion, upsertUser, validateSet
+from quiz_app.practice import PracticeError, createSet, feedback, getSet, getUser, listQuestionMistakes, listSets, progress, recordAnswer, refundGeneration, reserveGeneration, resetSet, safeQuestion, upsertUser, validateSet
 
 APP_DIR = Path(__file__).resolve().parent
 FRONTEND_DIST = APP_DIR / 'frontend' / 'dist'
@@ -112,16 +112,17 @@ def createSample():
               'title': 'Tracing a loop', 'language': 'python'}
     settings = {'questionCount': 3, 'difficulty': 'easy'}
     questionData = [
-        ('What does this code print?', ['2', '4', '6', '8'], 'c', 'The loop adds 2 and then 4 to zero, so print shows 6.'),
-        ('How many times does the loop body run?', ['1', '2', '3', '4'], 'b', 'The list has two values, so the loop body runs once for each value.'),
-        ('What is total after the first loop iteration?', ['0', '2', '4', '6'], 'b', 'The first value is 2, and total starts at 0, so total becomes 2.'),
+        ('What does this code print?', ['2', '4', '6', '8'], 'c', 'The loop adds 2 and then 4 to zero, so print shows 6.', 'loops'),
+        ('How many times does the loop body run?', ['1', '2', '3', '4'], 'b', 'The list has two values, so the loop body runs once for each value.', 'loops'),
+        ('What is total after the first loop iteration?', ['0', '2', '4', '6'], 'b', 'The first value is 2, and total starts at 0, so total becomes 2.', 'state-tracing'),
     ]
     raw = {'schemaVersion': 1, 'title': 'Tracing a loop', 'questions': [
         {'id': f'q{index}', 'type': 'code_tracing', 'prompt': prompt,
          'code': {'language': 'python', 'text': source['text']},
          'choices': [{'id': letter, 'text': choice} for letter, choice in zip('abcd', choices)],
-         'answer': {'choiceId': answer}, 'explanation': explanation, 'difficulty': 'easy'}
-        for index, (prompt, choices, answer, explanation) in enumerate(questionData, 1)]}
+         'answer': {'choiceId': answer}, 'explanation': explanation, 'difficulty': 'easy',
+         'category': category}
+        for index, (prompt, choices, answer, explanation, category) in enumerate(questionData, 1)]}
     practiceSet = validateSet(raw, source, settings)
     setId = createSet(ownerId(), practiceSet)
     return jsonify({'id': setId, 'title': practiceSet['title'], 'progress': progress(practiceSet, {}),
@@ -209,16 +210,29 @@ def submitAnswer(setId):
     if not ownerId():
         return error('Sign in to answer questions.', 401)
     data = request.get_json(silent=True)
-    if not isinstance(data, dict) or not isinstance(data.get('questionId'), str) or not isinstance(data.get('choiceId'), str):
-        return error('Question ID and choice ID are required.')
+    if (not isinstance(data, dict) or not isinstance(data.get('questionId'), str)
+            or not isinstance(data.get('choiceId'), str)
+            or not isinstance(data.get('questionType'), str)
+            or not isinstance(data.get('category'), str)):
+        return error('Question ID, choice ID, type, and category are required.')
     try:
-        answer = recordAnswer(ownerId(), setId, data['questionId'], data['choiceId'])
+        user = currentUser()
+        answer = recordAnswer(user['id'], ownerId(), setId, data['questionId'], data['choiceId'],
+                              data['questionType'], data['category'])
         practiceSet, attempts = getSet(ownerId(), setId)
     except PracticeError as exc:
         return error(str(exc), 400)
     state = progress(practiceSet, attempts)
     return jsonify({'feedback': answer, 'progress': state,
                     'nextQuestion': None if state['completed'] else safeQuestion(practiceSet['questions'][state['answered']])})
+
+
+@app.get('/api/question-mistakes')
+def getQuestionMistakes():
+    user = currentUser()
+    if not user:
+        return error('Sign in to view question history.', 401)
+    return jsonify({'mistakes': listQuestionMistakes(user['id'])})
 
 
 @app.get('/api/practice-sets/<setId>/results')
