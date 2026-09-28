@@ -72,19 +72,18 @@ class PracticeTests(unittest.TestCase):
         self.assertEqual(response.json['error'], 'Provider unavailable')
 
     def test_malformed_generation_retries_once(self):
-        message = type('Message', (), {'content': '{"schemaVersion":1,"questions":[]}'})()
-        response = type('Response', (), {'choices': [type('Choice', (), {'message': message})()]})()
-        with patch.dict('os.environ', {'OPENAI_API_KEY': 'test-key'}), patch.object(ai_service, 'OpenAI') as client:
-            response.output_text = '{"schemaVersion":1,"questions":[]}'
-            client.return_value.responses.create.return_value = response
+        response = type('Response', (), {
+            'status_code': 200,
+            'json': lambda self: {'choices': [{'message': {'content': '{"schemaVersion":1,"questions":[]}'}}]},
+        })()
+        with patch.dict('os.environ', {'OPENROUTER_API_KEY': 'test-key'}), patch.object(ai_service.requests, 'post', return_value=response) as post:
             with self.assertRaises(ai_service.AIServiceError):
                 ai_service.generateSet(SOURCE, SETTINGS)
-            self.assertEqual(client.return_value.responses.create.call_count, 2)
-            request = client.return_value.responses.create.call_args.kwargs
-            self.assertEqual(request['model'], 'gpt-6-luna')
-            self.assertEqual(request['reasoning']['effort'], 'medium')
-            self.assertNotIn('temperature', request)
-            self.assertIn('code-reading', request['instructions'])
+            self.assertEqual(post.call_count, 2)
+            request = post.call_args.kwargs['json']
+            self.assertEqual(request['model'], 'google/gemini-2.5-flash')
+            self.assertEqual(request['response_format'], {'type': 'json_object'})
+            self.assertIn('code-reading', request['messages'][0]['content'])
 
     def test_any_language_and_source_limit(self):
         source = {'text': 'console.log(1 + 2)', 'title': 'JavaScript', 'language': 'JavaScript'}
