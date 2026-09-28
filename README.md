@@ -13,7 +13,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Set `SECRET_KEY`, `OPENAI_API_KEY`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET` in `.env`. Register `http://localhost:5173/api/auth/google/callback` as an authorized redirect URI for your Google OAuth web application. Then run:
+Set `SECRET_KEY`, `OPENROUTER_API_KEY`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET` in `.env`. Create the OpenRouter key at [OpenRouter Keys](https://openrouter.ai/settings/keys). Register `http://localhost:5173/api/auth/google/callback` as an authorized redirect URI for your Google OAuth web application. Then run:
 
 ```sh
 set -a
@@ -32,13 +32,12 @@ npm run dev
 
 Open `http://localhost:5173`. The development server forwards `/api` to Flask at `127.0.0.1:5001`.
 
-To inspect the interface without Google credentials or OpenAI charges, set `LOCAL_DEMO_MODE=true` **only for local development**. The practice page offers a local demo account and a hand-authored Python sample set. This mode is restricted to loopback requests and does not send the sample to OpenAI.
+To inspect the interface without Google credentials or OpenRouter charges, set `LOCAL_DEMO_MODE=true` **only for local development**. The practice page offers a local demo account and a hand-authored Python sample set. This mode is restricted to loopback requests and does not send the sample to OpenRouter.
 
 ## Configuration
 
-- `OPENAI_API_KEY`: server-side key for generated questions.
-- `OPENAI_MODEL`: defaults to `gpt-6-luna`.
-- `OPENAI_REASONING_EFFORT`: defaults to `medium`.
+- `OPENROUTER_API_KEY`: server-side key for generated questions.
+- `OPENROUTER_MODEL`: defaults to `google/gemini-2.5-flash`. Use an OpenRouter model ID that supports JSON output.
 - `SECRET_KEY`: long random secret for signed session cookies.
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: OAuth credentials.
 - `GOOGLE_REDIRECT_URI`: callback URL registered with Google. Defaults to the API origin plus `/api/auth/google/callback` if omitted; set it explicitly for Vite development.

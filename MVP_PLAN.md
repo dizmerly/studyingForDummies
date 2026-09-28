@@ -11,12 +11,12 @@ Keep the first release focused on one end-to-end loop. Do not spend MVP time on 
 - The React/Vite app in `quiz_app/frontend/src/App.jsx` renders the landing page. Its login and pricing routes are placeholders; there is no working practice UI or API client.
 - `quiz_app/app.py` already has Flask routes for auth, quiz text upload/paste, question/answer/results/restart, API-key settings, AI generation, and AI chat.
 - `quiz_app/ai_service.py` currently emits a custom delimited text format, while `quiz_app/quiz_logic.py` parses it. The sample in `examples/sample-quiz.txt` shows the format.
-- The backend expects a signed-in user and a stored OpenAI API key for generation. There is no corresponding frontend settings flow.
+- The backend expects a signed-in user and a stored OpenRouter API key for generation. There is no corresponding frontend settings flow.
 - Quiz data is currently held in Flask's default client-side session cookie. The DB history functions exist, but result persistence and quiz ownership/session lifecycle should be reviewed before relying on them.
 
 ## Recommended MVP decisions
 
-1. **One provider, one flow:** use OpenAI for the first integration; keep credentials server-side. Prefer one server-configured `OPENAI_API_KEY` for a private/demo MVP so students do not need to bring their own key. If this is meant for public multi-user deployment, stop and decide on billing/abuse controls before enabling a shared paid key.
+1. **One provider, one flow:** use OpenRouter for the first integration; keep credentials server-side. Prefer one server-configured `OPENROUTER_API_KEY` for a private/demo MVP so students do not need to bring their own key. If this is meant for public multi-user deployment, stop and decide on billing/abuse controls before enabling a shared paid key.
 2. **Structured contract:** make JSON the canonical generation format, with a schema version and strict server validation. Keep parsing the legacy text format only if needed for existing demo/import compatibility.
 3. **Low-friction access:** allow an anonymous local practice session first. Defer account signup/login and history persistence until the core loop works; if retaining auth, wire it end to end instead of exposing placeholder navigation.
 4. **Small scope:** multiple-choice output/tracing questions only, one language initially (Python is a sensible default), 3–5 questions per set, easy/medium difficulty.
