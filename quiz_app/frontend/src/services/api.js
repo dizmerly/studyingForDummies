@@ -20,29 +20,56 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  config() { return request('/config'); },
-  me() { return request('/auth/me'); },
-  demoLogin() { return request('/auth/demo', { method: 'POST' }); },
-  logout() { return request('/auth/logout', { method: 'POST' }); },
-  sample() { return request('/practice-sets/sample', { method: 'POST' }); },
-  listSets() { return request('/practice-sets'); },
+  config() {
+    return request('/config');
+  },
+
+  me() {
+    return request('/auth/me');
+  },
+
+  demoLogin() {
+    return request('/auth/demo', { method: 'POST' });
+  },
+
+  logout() {
+    return request('/auth/logout', { method: 'POST' });
+  },
+
+  sample() {
+    return request('/practice-sets/sample', { method: 'POST' });
+  },
+
+  listSets() {
+    return request('/practice-sets');
+  },
+
   generate(source, settings) {
     return request('/practice-sets/generate', {
-      method: 'POST', body: JSON.stringify({ source, settings }),
+      method: 'POST',
+      body: JSON.stringify({ source, settings }),
     });
   },
+
   getSet(setId) {
     return request(`/practice-sets/${setId}`);
   },
+
   answer(setId, questionId, choiceId, questionType, category) {
     return request(`/practice-sets/${setId}/answers`, {
-      method: 'POST', body: JSON.stringify({ questionId, choiceId, questionType, category }),
+      method: 'POST',
+      body: JSON.stringify({ questionId, choiceId, questionType, category }),
     });
   },
-  questionMistakes() { return request('/question-mistakes'); },
+
+  questionMistakes() {
+    return request('/question-mistakes');
+  },
+
   results(setId) {
     return request(`/practice-sets/${setId}/results`);
   },
+
   retry(setId) {
     return request(`/practice-sets/${setId}/retry`, { method: 'POST' });
   },
