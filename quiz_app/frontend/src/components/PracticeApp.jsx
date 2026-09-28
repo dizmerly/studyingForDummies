@@ -138,18 +138,6 @@ export default function PracticeApp({ theme, onToggleTheme }) {
     setPhase('sign-in');
   }
 
-  async function useSample() {
-    setError('');
-    setPhase('generating');
-
-    try {
-      openSet(await api.sample());
-    } catch (sampleError) {
-      setError(sampleError.message);
-      setPhase('source');
-    }
-  }
-
   function openSet(data) {
     localStorage.setItem(storageKey, data.id);
     setSetId(data.id);
@@ -361,16 +349,6 @@ export default function PracticeApp({ theme, onToggleTheme }) {
               <button className="button button-primary" type="submit" disabled={phase === 'generating'}>
                 {phase === 'generating' ? 'Generating questions…' : 'Generate questions'}
               </button>
-              {demoMode && (
-                <button
-                  className="button button-outline"
-                  type="button"
-                  disabled={phase === 'generating'}
-                  onClick={useSample}
-                >
-                  Try sample cards without AI
-                </button>
-              )}
             </form>
 
             {savedSets.length > 0 && (

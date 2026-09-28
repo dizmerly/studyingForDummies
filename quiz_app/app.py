@@ -24,7 +24,6 @@ from quiz_app.practice import (
     resetSet,
     safeQuestion,
     upsertUser,
-    validateSet,
 )
 
 APP_DIR = Path(__file__).resolve().parent
@@ -132,72 +131,6 @@ def demoLogin():
     session.clear()
     session['userId'] = upsertUser('local-demo-user', 'demo@localhost', 'Local demo')
     return jsonify({'user': currentUser()})
-
-
-@app.post('/api/practice-sets/sample')
-def createSample():
-    if not demoEnabled() or not currentUser():
-        return error('Local demo is unavailable.', 404)
-
-    source = {
-        'text': 'values = [2, 4]\ntotal = 0\nfor value in values:\n    total += value\nprint(total)',
-        'title': 'Tracing a loop',
-        'language': 'python',
-    }
-    settings = {'questionCount': 3, 'difficulty': 'easy'}
-    questionData = [
-        (
-            'What does this code print?',
-            ['2', '4', '6', '8'],
-            'c',
-            'The loop adds 2 and then 4 to zero, so print shows 6.',
-            'loops',
-        ),
-        (
-            'How many times does the loop body run?',
-            ['1', '2', '3', '4'],
-            'b',
-            'The list has two values, so the loop body runs once for each value.',
-            'loops',
-        ),
-        (
-            'What is total after the first loop iteration?',
-            ['0', '2', '4', '6'],
-            'b',
-            'The first value is 2, and total starts at 0, so total becomes 2.',
-            'state-tracing',
-        ),
-    ]
-    raw = {
-        'schemaVersion': 1,
-        'title': 'Tracing a loop',
-        'questions': [
-            {
-                'id': f'q{index}',
-                'type': 'code_tracing',
-                'prompt': prompt,
-                'code': {'language': 'python', 'text': source['text']},
-                'choices': [
-                    {'id': letter, 'text': choice}
-                    for letter, choice in zip('abcd', choices)
-                ],
-                'answer': {'choiceId': answer},
-                'explanation': explanation,
-                'difficulty': 'easy',
-                'category': category,
-            }
-            for index, (prompt, choices, answer, explanation, category) in enumerate(questionData, 1)
-        ],
-    }
-
-    practiceSet = validateSet(raw, source, settings)
-    setId = createSet(ownerId(), practiceSet)
-    return jsonify({
-        'id': setId,
-        'title': practiceSet['title'],
-        'progress': progress(practiceSet, {}),
-        'question': safeQuestion(practiceSet['questions'][0]),
-    }), 201
 
 
 @app.get('/api/practice-sets')

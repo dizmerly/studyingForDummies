@@ -32,7 +32,9 @@ npm run dev
 
 Open `http://localhost:5173`. The development server forwards `/api` to Flask at `127.0.0.1:5001`.
 
-To inspect the interface without Google credentials or OpenRouter charges, set `LOCAL_DEMO_MODE=true` **only for local development**. The practice page offers a local demo account and a hand-authored Python sample set. This mode is restricted to loopback requests and does not send the sample to OpenRouter.
+To sign in locally without Google credentials, set `LOCAL_DEMO_MODE=true` for local development.
+The practice page then offers a local demo account. Generating questions still requires OpenRouter.
+The local demo account is restricted to loopback requests.
 
 ## Configuration
 
@@ -64,7 +66,8 @@ The input page accepts up to **5,000 characters**, a language name up to 60 char
 - `GET /api/practice-sets/<id>/results`: completed results.
 - `POST /api/practice-sets/<id>/retry`: clear attempts and retry.
 
-With `LOCAL_DEMO_MODE=true`, `POST /api/auth/demo` signs into the local demo account and `POST /api/practice-sets/sample` saves a hand-authored three-card set. These routes are unavailable outside local demo mode.
+With `LOCAL_DEMO_MODE=true`, `POST /api/auth/demo` signs into the local demo account.
+The route is unavailable outside local demo mode. Hand-authored cards live on the `demo` branch.
 
 ## UI
 

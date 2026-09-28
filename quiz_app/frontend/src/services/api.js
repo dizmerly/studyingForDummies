@@ -36,10 +36,6 @@ export const api = {
     return request('/auth/logout', { method: 'POST' });
   },
 
-  sample() {
-    return request('/practice-sets/sample', { method: 'POST' });
-  },
-
   listSets() {
     return request('/practice-sets');
   },
